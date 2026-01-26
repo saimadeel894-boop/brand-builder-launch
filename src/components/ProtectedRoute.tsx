@@ -1,9 +1,20 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 
-export default function Index() {
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+  requireRole?: boolean;
+  requireProfile?: boolean;
+}
+
+export function ProtectedRoute({
+  children,
+  requireRole = false,
+  requireProfile = false,
+}: ProtectedRouteProps) {
   const { user, profile, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -15,19 +26,18 @@ export default function Index() {
 
   // Not logged in - redirect to login
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   // Logged in but no role - redirect to role selection
-  if (!profile?.role) {
+  if (requireRole && !profile?.role) {
     return <Navigate to="/select-role" replace />;
   }
 
   // Has role but profile not complete - redirect to profile creation
-  if (!profile?.profile_completed) {
+  if (requireProfile && profile?.role && !profile?.profile_completed) {
     return <Navigate to="/create-profile" replace />;
   }
 
-  // Profile complete - redirect to dashboard
-  return <Navigate to="/dashboard" replace />;
+  return <>{children}</>;
 }

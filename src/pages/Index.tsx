@@ -1,6 +1,7 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
+import Landing from "./Landing";
 
 export default function Index() {
   const { user, profile, loading } = useAuth();
@@ -13,9 +14,9 @@ export default function Index() {
     );
   }
 
-  // Not logged in - redirect to login
+  // Not logged in - show landing page
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Landing />;
   }
 
   // Logged in but no role - redirect to role selection

@@ -14,6 +14,11 @@ import {
   Factory,
   Building2,
   Users,
+  MessageSquare,
+  HelpCircle,
+  Diamond,
+  TrendingUp,
+  Plus,
 } from "lucide-react";
 
 interface DashboardLayoutProps {
@@ -57,11 +62,44 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   };
 
-  const navigation = [
-    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Settings", href: "/settings", icon: Settings },
-  ];
+  const getNavigation = () => {
+    const baseNav = [
+      { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    ];
 
+    switch (profile?.role) {
+      case "manufacturer":
+        return [
+          ...baseNav,
+          { name: "Collaborations", href: "/collaborations", icon: Diamond },
+          { name: "Messages", href: "/messages", icon: MessageSquare },
+          { name: "Brands", href: "/brands", icon: Building2 },
+          { name: "Influencers", href: "/influencers", icon: Users },
+          { name: "Analytics", href: "/analytics", icon: TrendingUp },
+        ];
+      case "brand":
+        return [
+          ...baseNav,
+          { name: "Collaborations", href: "/collaborations", icon: Diamond },
+          { name: "Messages", href: "/messages", icon: MessageSquare },
+          { name: "Manufacturers", href: "/manufacturers", icon: Factory },
+          { name: "Influencers", href: "/influencers", icon: Users },
+          { name: "Analytics", href: "/analytics", icon: TrendingUp },
+        ];
+      case "influencer":
+        return [
+          ...baseNav,
+          { name: "Collaborations", href: "/collaborations", icon: Diamond },
+          { name: "Messages", href: "/messages", icon: MessageSquare },
+          { name: "Brands", href: "/brands", icon: Building2 },
+          { name: "Analytics", href: "/analytics", icon: TrendingUp },
+        ];
+      default:
+        return baseNav;
+    }
+  };
+
+  const navigation = getNavigation();
   const RoleIcon = getRoleIcon();
 
   return (
@@ -90,38 +128,29 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <span className="font-semibold text-sidebar-foreground">BeautyChain</span>
           </div>
 
-          {/* User info */}
-          <div className="border-b border-sidebar-border px-6 py-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sidebar-accent">
-                <RoleIcon className="h-5 w-5 text-sidebar-accent-foreground" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="truncate text-sm font-medium text-sidebar-foreground">
-                  {profile?.email || "User"}
-                </p>
-                <p className="text-xs text-muted-foreground">{getRoleLabel()}</p>
-              </div>
-            </div>
-          </div>
-
           {/* Navigation */}
           <nav className="flex-1 space-y-1 px-3 py-4">
             {navigation.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.href;
+              const isDisabled = item.href !== "/dashboard";
 
               return (
                 <Link
                   key={item.name}
-                  to={item.href}
+                  to={isDisabled ? "#" : item.href}
                   className={cn(
                     "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                     isActive
                       ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                      : isDisabled
+                      ? "text-sidebar-foreground/50 cursor-not-allowed"
                       : "text-sidebar-foreground hover:bg-sidebar-accent/50"
                   )}
-                  onClick={() => setSidebarOpen(false)}
+                  onClick={(e) => {
+                    if (isDisabled) e.preventDefault();
+                    setSidebarOpen(false);
+                  }}
                 >
                   <Icon className="h-5 w-5" />
                   {item.name}
@@ -130,8 +159,30 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             })}
           </nav>
 
-          {/* Sign out */}
+          {/* Settings */}
+          <div className="border-t border-sidebar-border px-3 py-4">
+            <Link
+              to="#"
+              className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground/50 cursor-not-allowed"
+            >
+              <Settings className="h-5 w-5" />
+              Settings
+            </Link>
+          </div>
+
+          {/* User section */}
           <div className="border-t border-sidebar-border p-4">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sidebar-accent">
+                <RoleIcon className="h-5 w-5 text-sidebar-accent-foreground" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="truncate text-sm font-medium text-sidebar-foreground">
+                  {profile?.email?.split("@")[0] || "User"}
+                </p>
+                <p className="text-xs text-muted-foreground truncate">{profile?.email}</p>
+              </div>
+            </div>
             <Button
               variant="ghost"
               className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent/50"
@@ -161,8 +212,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="search"
-                placeholder="Search..."
-                className="h-9 w-full rounded-lg border border-input bg-background pl-10 pr-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                placeholder="Search collaborations, messages..."
+                className="h-10 w-full rounded-lg border border-input bg-background pl-10 pr-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
           </div>
@@ -170,7 +221,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           {/* Actions */}
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" className="relative">
+              <HelpCircle className="h-5 w-5" />
+            </Button>
+            <Button variant="ghost" size="icon" className="relative">
               <Bell className="h-5 w-5" />
+            </Button>
+            <Button className="hidden sm:flex gap-2">
+              <Plus className="h-4 w-4" />
+              Start New Collaboration
             </Button>
           </div>
         </header>

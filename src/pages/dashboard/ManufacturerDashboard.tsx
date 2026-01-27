@@ -1,81 +1,68 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
+import { useManufacturerProfile } from "@/hooks/useManufacturerProfile";
+import { useProducts } from "@/hooks/useProducts";
+import { useRfqs } from "@/hooks/useRfqs";
 import { 
-  Factory, 
   Package, 
-  MessageSquare, 
   FileText, 
   CheckCircle, 
   Mail, 
   AlertCircle,
   ArrowRight,
-  TrendingUp
+  Plus,
+  Edit,
+  Eye
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-
-interface ManufacturerProfile {
-  company_name: string;
-  categories: string[];
-  certifications: string[];
-}
-
-// Mock data for demonstration
-const mockCollaborations = [
-  { id: 1, name: "Aura Skincare Launch", collaborator: "Bella Hadid", status: "In Progress", dueDate: "2024-08-15" },
-  { id: 2, name: "Zenith Smartwatch", collaborator: "TechFlow Inc.", status: "Completed", dueDate: "2024-07-20" },
-  { id: 3, name: "Eco-Friendly Packaging", collaborator: "GreenLeaf Designs", status: "Review", dueDate: "2024-07-30" },
-];
-
-const mockActivityFeed = [
-  { id: 1, type: "success", message: "Project 'Zenith' status updated to 'Completed'.", time: "2 hours ago", icon: CheckCircle },
-  { id: 2, type: "message", message: "New message from Bella Hadid.", time: "5 hours ago", icon: Mail },
-  { id: 3, type: "request", message: "You have a pending request from EcoWear.", time: "1 day ago", icon: AlertCircle },
-];
-
-const mockTasks = [
-  { id: 1, name: "Review GreenLeaf proposal", due: "Tomorrow" },
-  { id: 2, name: "Approve campaign budget", due: "2024-07-29" },
-];
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function ManufacturerDashboard() {
-  const { user, profile: authProfile } = useAuth();
-  const [profile, setProfile] = useState<ManufacturerProfile | null>(null);
+  const { profile: authProfile } = useAuth();
+  const { profile, loading: profileLoading } = useManufacturerProfile();
+  const { products, loading: productsLoading } = useProducts(profile?.id);
+  const { rfqs, loading: rfqsLoading } = useRfqs(profile?.id);
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      if (!user) return;
-
-      const { data } = await supabase
-        .from("manufacturer_profiles")
-        .select("*")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (data) {
-        setProfile(data);
-      }
-    };
-
-    fetchProfile();
-  }, [user]);
+  const pendingRfqs = rfqs.filter(r => r.status === "pending" || r.status === "in_review");
 
   const stats = [
-    { label: "Active Collaborations", value: "12", change: "+2%", changeType: "positive" },
-    { label: "Unread Messages", value: "5", change: "+5%", changeType: "positive" },
-    { label: "Pending Requests", value: "3", change: "+1%", changeType: "neutral" },
+    { 
+      label: "Products", 
+      value: products.length.toString(), 
+      icon: Package,
+      href: "/manufacturer/products",
+      color: "text-blue-600 bg-blue-100"
+    },
+    { 
+      label: "Pending RFQs", 
+      value: pendingRfqs.length.toString(), 
+      icon: FileText,
+      href: "/manufacturer/rfqs",
+      color: "text-yellow-600 bg-yellow-100"
+    },
+    { 
+      label: "Total RFQs", 
+      value: rfqs.length.toString(), 
+      icon: Mail,
+      href: "/manufacturer/rfqs",
+      color: "text-green-600 bg-green-100"
+    },
   ];
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case "In Progress":
-        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">In Progress</Badge>;
-      case "Completed":
-        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Completed</Badge>;
-      case "Review":
-        return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">Review</Badge>;
+      case "pending":
+        return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">Pending</Badge>;
+      case "in_review":
+        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">In Review</Badge>;
+      case "accepted":
+        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Accepted</Badge>;
+      case "rejected":
+        return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Rejected</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -92,128 +79,192 @@ export default function ManufacturerDashboard() {
               Welcome back, {profile?.company_name || authProfile?.email?.split("@")[0] || "User"}!
             </h1>
             <p className="mt-1 text-muted-foreground">
-              Here's a summary of your collaborations and messages.
+              Here's a summary of your products and incoming requests.
             </p>
           </div>
 
           {/* Stats grid */}
           <div className="grid gap-4 sm:grid-cols-3">
-            {stats.map((stat) => (
-              <div key={stat.label} className="stat-card">
-                <span className="text-sm text-muted-foreground">{stat.label}</span>
-                <div className="mt-2 flex items-baseline gap-2">
-                  <span className="text-3xl font-bold text-foreground">{stat.value}</span>
-                  <span className={`text-sm ${stat.changeType === "positive" ? "text-success" : "text-muted-foreground"}`}>
-                    {stat.change}
-                  </span>
+            {stats.map((stat) => {
+              const Icon = stat.icon;
+              return (
+                <Link key={stat.label} to={stat.href}>
+                  <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                    <CardContent className="pt-6">
+                      <div className="flex items-center gap-4">
+                        <div className={`p-3 rounded-lg ${stat.color}`}>
+                          <Icon className="h-6 w-6" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">{stat.label}</p>
+                          <p className="text-3xl font-bold text-foreground">{stat.value}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* Recent RFQs */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Recent RFQs</CardTitle>
+              <Link to="/manufacturer/rfqs">
+                <Button variant="ghost" size="sm">
+                  View All
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+            </CardHeader>
+            <CardContent>
+              {rfqsLoading ? (
+                <p className="text-muted-foreground">Loading...</p>
+              ) : rfqs.length === 0 ? (
+                <div className="text-center py-8">
+                  <FileText className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
+                  <p className="text-muted-foreground">No RFQs received yet</p>
                 </div>
-              </div>
-            ))}
-          </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-border">
+                        <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Title</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Brand</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {rfqs.slice(0, 5).map((rfq) => (
+                        <tr key={rfq.id} className="hover:bg-secondary/50">
+                          <td className="px-4 py-3 text-sm font-medium text-foreground">{rfq.title}</td>
+                          <td className="px-4 py-3 text-sm text-muted-foreground">{rfq.brand_name}</td>
+                          <td className="px-4 py-3">{getStatusBadge(rfq.status)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-          {/* Ongoing Collaborations */}
-          <div className="bg-card rounded-xl border shadow-sm">
-            <div className="p-6 border-b border-border">
-              <h2 className="text-lg font-semibold text-foreground">Ongoing Collaborations</h2>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-border">
-                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Project Name</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Collaborator</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Due Date</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {mockCollaborations.map((collab) => (
-                    <tr key={collab.id} className="hover:bg-secondary/50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">{collab.name}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{collab.collaborator}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(collab.status)}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{collab.dueDate}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <Button variant="link" className="text-primary p-0 h-auto">View</Button>
-                      </td>
-                    </tr>
+          {/* Recent Products */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Recent Products</CardTitle>
+              <Link to="/manufacturer/products">
+                <Button variant="ghost" size="sm">
+                  View All
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+            </CardHeader>
+            <CardContent>
+              {productsLoading ? (
+                <p className="text-muted-foreground">Loading...</p>
+              ) : products.length === 0 ? (
+                <div className="text-center py-8">
+                  <Package className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
+                  <p className="text-muted-foreground">No products added yet</p>
+                  <Link to="/manufacturer/products">
+                    <Button className="mt-4">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Your First Product
+                    </Button>
+                  </Link>
+                </div>
+              ) : (
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {products.slice(0, 6).map((product) => (
+                    <div key={product.id} className="flex items-center gap-3 p-3 bg-secondary/50 rounded-lg">
+                      <div className="h-12 w-12 rounded-lg bg-secondary overflow-hidden flex-shrink-0">
+                        {product.images.length > 0 ? (
+                          <img src={product.images[0]} alt={product.name} className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="h-full w-full flex items-center justify-center">
+                            <Package className="h-6 w-6 text-muted-foreground/50" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-foreground truncate">{product.name}</p>
+                        <p className="text-xs text-muted-foreground">{product.category}</p>
+                      </div>
+                    </div>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
-          {/* Profile summary */}
-          <div className="form-section">
-            <h2 className="text-lg font-semibold text-foreground">Your Profile</h2>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        {/* Right sidebar */}
+        <div className="w-full xl:w-80 space-y-6">
+          {/* Quick Actions */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Link to="/manufacturer/products" className="block">
+                <Button variant="outline" className="w-full justify-start">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add New Product
+                </Button>
+              </Link>
+              <Link to="/manufacturer/profile" className="block">
+                <Button variant="outline" className="w-full justify-start">
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit Profile
+                </Button>
+              </Link>
+              <Link to="/manufacturer/rfqs" className="block">
+                <Button variant="outline" className="w-full justify-start">
+                  <Eye className="mr-2 h-4 w-4" />
+                  View RFQs
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          {/* Profile Summary */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Profile Summary</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div>
                 <span className="text-sm text-muted-foreground">Company Name</span>
                 <p className="font-medium text-foreground">{profile?.company_name || "-"}</p>
               </div>
               <div>
+                <span className="text-sm text-muted-foreground">MOQ</span>
+                <p className="font-medium text-foreground">{profile?.moq || "Not set"}</p>
+              </div>
+              <div>
+                <span className="text-sm text-muted-foreground">Lead Time</span>
+                <p className="font-medium text-foreground">{profile?.lead_time || "Not set"}</p>
+              </div>
+              <div>
                 <span className="text-sm text-muted-foreground">Categories</span>
-                <div className="mt-1 flex flex-wrap gap-2">
+                <div className="mt-1 flex flex-wrap gap-1">
                   {profile?.categories?.length ? (
-                    profile.categories.map((cat, index) => (
-                      <Badge key={index} variant="secondary">{cat}</Badge>
+                    profile.categories.slice(0, 3).map((cat, index) => (
+                      <Badge key={index} variant="secondary" className="text-xs">{cat}</Badge>
                     ))
                   ) : (
-                    <span className="text-muted-foreground">-</span>
+                    <span className="text-muted-foreground text-sm">None added</span>
+                  )}
+                  {(profile?.categories?.length || 0) > 3 && (
+                    <Badge variant="secondary" className="text-xs">+{profile!.categories.length - 3}</Badge>
                   )}
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right sidebar */}
-        <div className="w-full xl:w-80 space-y-6">
-          {/* Activity Feed */}
-          <div className="bg-card rounded-xl border shadow-sm p-6">
-            <h3 className="font-semibold text-foreground mb-4">Activity Feed</h3>
-            <div className="space-y-4">
-              {mockActivityFeed.map((activity) => {
-                const Icon = activity.icon;
-                return (
-                  <div key={activity.id} className="flex gap-3">
-                    <div className={`flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center ${
-                      activity.type === "success" ? "bg-green-100" :
-                      activity.type === "message" ? "bg-blue-100" :
-                      "bg-yellow-100"
-                    }`}>
-                      <Icon className={`h-4 w-4 ${
-                        activity.type === "success" ? "text-green-600" :
-                        activity.type === "message" ? "text-blue-600" :
-                        "text-yellow-600"
-                      }`} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-foreground">{activity.message}</p>
-                      <p className="text-xs text-muted-foreground">{activity.time}</p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Pending Tasks */}
-          <div className="bg-card rounded-xl border shadow-sm p-6">
-            <h3 className="font-semibold text-foreground mb-4">Pending Tasks</h3>
-            <div className="space-y-3">
-              {mockTasks.map((task) => (
-                <div key={task.id} className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
-                  <div>
-                    <p className="text-sm font-medium text-foreground">{task.name}</p>
-                    <p className="text-xs text-muted-foreground">Due: {task.due}</p>
-                  </div>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                </div>
-              ))}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </DashboardLayout>

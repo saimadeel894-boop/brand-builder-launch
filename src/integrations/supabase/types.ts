@@ -90,27 +90,42 @@ export type Database = {
           certifications: string[]
           company_name: string
           created_at: string
+          description: string | null
           id: string
+          lead_time: string | null
+          location: string | null
+          moq: string | null
           updated_at: string
           user_id: string
+          website: string | null
         }
         Insert: {
           categories?: string[]
           certifications?: string[]
           company_name: string
           created_at?: string
+          description?: string | null
           id?: string
+          lead_time?: string | null
+          location?: string | null
+          moq?: string | null
           updated_at?: string
           user_id: string
+          website?: string | null
         }
         Update: {
           categories?: string[]
           certifications?: string[]
           company_name?: string
           created_at?: string
+          description?: string | null
           id?: string
+          lead_time?: string | null
+          location?: string | null
+          moq?: string | null
           updated_at?: string
           user_id?: string
+          website?: string | null
         }
         Relationships: [
           {
@@ -118,6 +133,59 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: true
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          documents: string[] | null
+          id: string
+          images: string[] | null
+          lead_time: string | null
+          manufacturer_id: string
+          moq: string | null
+          name: string
+          price_range: string | null
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          documents?: string[] | null
+          id?: string
+          images?: string[] | null
+          lead_time?: string | null
+          manufacturer_id: string
+          moq?: string | null
+          name: string
+          price_range?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          documents?: string[] | null
+          id?: string
+          images?: string[] | null
+          lead_time?: string | null
+          manufacturer_id?: string
+          moq?: string | null
+          name?: string
+          price_range?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_manufacturer_id_fkey"
+            columns: ["manufacturer_id"]
+            isOneToOne: false
+            referencedRelation: "manufacturer_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -148,6 +216,66 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      rfqs: {
+        Row: {
+          brand_id: string
+          budget: string | null
+          category: string | null
+          created_at: string
+          deadline: string | null
+          description: string | null
+          id: string
+          manufacturer_id: string
+          quantity: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          brand_id: string
+          budget?: string | null
+          category?: string | null
+          created_at?: string
+          deadline?: string | null
+          description?: string | null
+          id?: string
+          manufacturer_id: string
+          quantity?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          brand_id?: string
+          budget?: string | null
+          category?: string | null
+          created_at?: string
+          deadline?: string | null
+          description?: string | null
+          id?: string
+          manufacturer_id?: string
+          quantity?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rfqs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brand_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rfqs_manufacturer_id_fkey"
+            columns: ["manufacturer_id"]
+            isOneToOne: false
+            referencedRelation: "manufacturer_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

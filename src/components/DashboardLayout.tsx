@@ -19,6 +19,8 @@ import {
   Diamond,
   TrendingUp,
   Plus,
+  Package,
+  FileText,
 } from "lucide-react";
 
 interface DashboardLayoutProps {
@@ -71,28 +73,28 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       case "manufacturer":
         return [
           ...baseNav,
-          { name: "Collaborations", href: "/collaborations", icon: Diamond },
-          { name: "Messages", href: "/messages", icon: MessageSquare },
-          { name: "Brands", href: "/brands", icon: Building2 },
-          { name: "Influencers", href: "/influencers", icon: Users },
-          { name: "Analytics", href: "/analytics", icon: TrendingUp },
+          { name: "Products", href: "/manufacturer/products", icon: Package },
+          { name: "My Profile", href: "/manufacturer/profile", icon: Factory },
+          { name: "RFQs", href: "/manufacturer/rfqs", icon: FileText },
+          { name: "Messages", href: "/messages", icon: MessageSquare, disabled: true },
+          { name: "Analytics", href: "/analytics", icon: TrendingUp, disabled: true },
         ];
       case "brand":
         return [
           ...baseNav,
-          { name: "Collaborations", href: "/collaborations", icon: Diamond },
-          { name: "Messages", href: "/messages", icon: MessageSquare },
-          { name: "Manufacturers", href: "/manufacturers", icon: Factory },
-          { name: "Influencers", href: "/influencers", icon: Users },
-          { name: "Analytics", href: "/analytics", icon: TrendingUp },
+          { name: "Collaborations", href: "/collaborations", icon: Diamond, disabled: true },
+          { name: "Messages", href: "/messages", icon: MessageSquare, disabled: true },
+          { name: "Manufacturers", href: "/manufacturers", icon: Factory, disabled: true },
+          { name: "Influencers", href: "/influencers", icon: Users, disabled: true },
+          { name: "Analytics", href: "/analytics", icon: TrendingUp, disabled: true },
         ];
       case "influencer":
         return [
           ...baseNav,
-          { name: "Collaborations", href: "/collaborations", icon: Diamond },
-          { name: "Messages", href: "/messages", icon: MessageSquare },
-          { name: "Brands", href: "/brands", icon: Building2 },
-          { name: "Analytics", href: "/analytics", icon: TrendingUp },
+          { name: "Collaborations", href: "/collaborations", icon: Diamond, disabled: true },
+          { name: "Messages", href: "/messages", icon: MessageSquare, disabled: true },
+          { name: "Brands", href: "/brands", icon: Building2, disabled: true },
+          { name: "Analytics", href: "/analytics", icon: TrendingUp, disabled: true },
         ];
       default:
         return baseNav;
@@ -132,8 +134,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <nav className="flex-1 space-y-1 px-3 py-4">
             {navigation.map((item) => {
               const Icon = item.icon;
-              const isActive = location.pathname === item.href;
-              const isDisabled = item.href !== "/dashboard";
+              const isActive = location.pathname === item.href || location.pathname.startsWith(item.href + "/");
+              const isDisabled = (item as any).disabled === true;
 
               return (
                 <Link

@@ -15,6 +15,11 @@ import CreateProfile from "./pages/CreateProfile";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 
+// Manufacturer Pages
+import ManufacturerProfile from "./pages/manufacturer/ManufacturerProfile";
+import ManufacturerProducts from "./pages/manufacturer/ManufacturerProducts";
+import ManufacturerRfqs from "./pages/manufacturer/ManufacturerRfqs";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -54,6 +59,32 @@ const App = () => (
               element={
                 <ProtectedRoute requireRole requireProfile>
                   <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Manufacturer routes */}
+            <Route
+              path="/manufacturer/profile"
+              element={
+                <ProtectedRoute requireRole requireProfile>
+                  <ManufacturerProfile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/manufacturer/products"
+              element={
+                <ProtectedRoute requireRole requireProfile>
+                  <ManufacturerProducts />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/manufacturer/rfqs"
+              element={
+                <ProtectedRoute requireRole requireProfile>
+                  <ManufacturerRfqs />
                 </ProtectedRoute>
               }
             />

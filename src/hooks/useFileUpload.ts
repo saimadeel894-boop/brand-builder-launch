@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
+import { storage } from "@/lib/firebase";
+import { useFirebaseAuth } from "@/contexts/FirebaseAuthContext";
 import { useToast } from "@/hooks/use-toast";
 
 interface UploadOptions {
@@ -9,7 +10,7 @@ interface UploadOptions {
 }
 
 export function useFileUpload() {
-  const { user } = useAuth();
+  const { user } = useFirebaseAuth();
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -31,28 +32,19 @@ export function useFileUpload() {
     const fileExt = file.name.split(".").pop();
     const fileName = `${crypto.randomUUID()}.${fileExt}`;
     const filePath = folder
-      ? `${user.id}/${folder}/${fileName}`
-      : `${user.id}/${fileName}`;
+      ? `${bucket}/${user.uid}/${folder}/${fileName}`
+      : `${bucket}/${user.uid}/${fileName}`;
 
     setUploading(true);
     setProgress(0);
 
     try {
-      const { error: uploadError } = await supabase.storage
-        .from(bucket)
-        .upload(filePath, file, {
-          cacheControl: "3600",
-          upsert: false,
-        });
-
-      if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage
-        .from(bucket)
-        .getPublicUrl(filePath);
+      const storageRef = ref(storage, filePath);
+      await uploadBytes(storageRef, file);
+      const downloadUrl = await getDownloadURL(storageRef);
 
       setProgress(100);
-      return urlData.publicUrl;
+      return downloadUrl;
     } catch (error: any) {
       console.error("Upload error:", error);
       toast({
@@ -80,18 +72,10 @@ export function useFileUpload() {
     return urls;
   };
 
-  const deleteFile = async (url: string, bucket: string): Promise<boolean> => {
+  const deleteFile = async (url: string): Promise<boolean> => {
     try {
-      // Extract path from URL
-      const urlObj = new URL(url);
-      const pathParts = urlObj.pathname.split(`/storage/v1/object/public/${bucket}/`);
-      if (pathParts.length < 2) return false;
-
-      const filePath = pathParts[1];
-
-      const { error } = await supabase.storage.from(bucket).remove([filePath]);
-      if (error) throw error;
-
+      const storageRef = ref(storage, url);
+      await deleteObject(storageRef);
       return true;
     } catch (error: any) {
       console.error("Delete error:", error);

@@ -26,12 +26,12 @@ const CERTIFICATION_OPTIONS = [
 
 export function ProfileEditForm({ profile, onSave, onCancel }: ProfileEditFormProps) {
   const [formData, setFormData] = useState({
-    company_name: profile.company_name,
+    companyName: profile.companyName,
     description: profile.description || "",
     location: profile.location || "",
     website: profile.website || "",
     moq: profile.moq || "",
-    lead_time: profile.lead_time || "",
+    leadTime: profile.leadTime || "",
     categories: [...profile.categories],
     certifications: [...profile.certifications],
   });
@@ -91,12 +91,12 @@ export function ProfileEditForm({ profile, onSave, onCancel }: ProfileEditFormPr
           {/* Basic Info */}
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="company_name">Company Name</Label>
+              <Label htmlFor="companyName">Company Name</Label>
               <Input
-                id="company_name"
-                value={formData.company_name}
+                id="companyName"
+                value={formData.companyName}
                 onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, company_name: e.target.value }))
+                  setFormData((prev) => ({ ...prev, companyName: e.target.value }))
                 }
                 required
               />
@@ -154,12 +154,12 @@ export function ProfileEditForm({ profile, onSave, onCancel }: ProfileEditFormPr
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="lead_time">Lead Time</Label>
+              <Label htmlFor="leadTime">Lead Time</Label>
               <Input
-                id="lead_time"
-                value={formData.lead_time}
+                id="leadTime"
+                value={formData.leadTime}
                 onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, lead_time: e.target.value }))
+                  setFormData((prev) => ({ ...prev, leadTime: e.target.value }))
                 }
                 placeholder="e.g., 4-6 weeks"
               />

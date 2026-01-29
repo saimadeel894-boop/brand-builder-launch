@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { useFirebaseAuth } from "@/contexts/FirebaseAuthContext";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { supabase } from "@/integrations/supabase/client";
 import { useManufacturerProfile } from "@/hooks/useManufacturerProfile";
 import { useProducts } from "@/hooks/useProducts";
 import { useRfqs } from "@/hooks/useRfqs";
@@ -22,7 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function ManufacturerDashboard() {
-  const { profile: authProfile } = useAuth();
+  const { profile: authProfile } = useFirebaseAuth();
   const { profile, loading: profileLoading } = useManufacturerProfile();
   const { products, loading: productsLoading } = useProducts(profile?.id);
   const { rfqs, loading: rfqsLoading } = useRfqs(profile?.id);
@@ -76,7 +75,7 @@ export default function ManufacturerDashboard() {
           {/* Welcome section */}
           <div>
             <h1 className="text-2xl font-bold text-foreground">
-              Welcome back, {profile?.company_name || authProfile?.email?.split("@")[0] || "User"}!
+              Welcome back, {profile?.companyName || authProfile?.email?.split("@")[0] || "User"}!
             </h1>
             <p className="mt-1 text-muted-foreground">
               Here's a summary of your products and incoming requests.
@@ -140,7 +139,7 @@ export default function ManufacturerDashboard() {
                       {rfqs.slice(0, 5).map((rfq) => (
                         <tr key={rfq.id} className="hover:bg-secondary/50">
                           <td className="px-4 py-3 text-sm font-medium text-foreground">{rfq.title}</td>
-                          <td className="px-4 py-3 text-sm text-muted-foreground">{rfq.brand_name}</td>
+                          <td className="px-4 py-3 text-sm text-muted-foreground">{rfq.brandName}</td>
                           <td className="px-4 py-3">{getStatusBadge(rfq.status)}</td>
                         </tr>
                       ))}
@@ -238,7 +237,7 @@ export default function ManufacturerDashboard() {
             <CardContent className="space-y-4">
               <div>
                 <span className="text-sm text-muted-foreground">Company Name</span>
-                <p className="font-medium text-foreground">{profile?.company_name || "-"}</p>
+                <p className="font-medium text-foreground">{profile?.companyName || "-"}</p>
               </div>
               <div>
                 <span className="text-sm text-muted-foreground">MOQ</span>
@@ -246,7 +245,7 @@ export default function ManufacturerDashboard() {
               </div>
               <div>
                 <span className="text-sm text-muted-foreground">Lead Time</span>
-                <p className="font-medium text-foreground">{profile?.lead_time || "Not set"}</p>
+                <p className="font-medium text-foreground">{profile?.leadTime || "Not set"}</p>
               </div>
               <div>
                 <span className="text-sm text-muted-foreground">Categories</span>

@@ -1,5 +1,5 @@
 import { Navigate, useLocation } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { useFirebaseAuth } from "@/contexts/FirebaseAuthContext";
 import { Loader2 } from "lucide-react";
 
 interface ProtectedRouteProps {
@@ -13,7 +13,7 @@ export function ProtectedRoute({
   requireRole = false,
   requireProfile = false,
 }: ProtectedRouteProps) {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading } = useFirebaseAuth();
   const location = useLocation();
 
   if (loading) {
@@ -35,7 +35,7 @@ export function ProtectedRoute({
   }
 
   // Has role but profile not complete - redirect to profile creation
-  if (requireProfile && profile?.role && !profile?.profile_completed) {
+  if (requireProfile && profile?.role && !profile?.profileCompleted) {
     return <Navigate to="/create-profile" replace />;
   }
 

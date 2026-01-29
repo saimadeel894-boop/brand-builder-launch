@@ -79,7 +79,7 @@ export default function ManufacturerProfile() {
                 <Building2 className="h-8 w-8 text-primary" />
               </div>
               <div>
-                <CardTitle className="text-xl">{profile.company_name}</CardTitle>
+                <CardTitle className="text-xl">{profile.companyName}</CardTitle>
                 {profile.location && (
                   <p className="text-muted-foreground flex items-center gap-1 mt-1">
                     <MapPin className="h-4 w-4" />
@@ -126,7 +126,7 @@ export default function ManufacturerProfile() {
                 <Clock className="h-5 w-5 text-muted-foreground" />
                 <div>
                   <p className="text-sm text-muted-foreground">Lead Time</p>
-                  <p className="font-medium">{profile.lead_time || "Not specified"}</p>
+                  <p className="font-medium">{profile.leadTime || "Not specified"}</p>
                 </div>
               </div>
             </div>

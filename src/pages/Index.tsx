@@ -1,10 +1,10 @@
 import { Navigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { useFirebaseAuth } from "@/contexts/FirebaseAuthContext";
 import { Loader2 } from "lucide-react";
 import Landing from "./Landing";
 
 export default function Index() {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading } = useFirebaseAuth();
 
   if (loading) {
     return (
@@ -25,7 +25,7 @@ export default function Index() {
   }
 
   // Has role but profile not complete - redirect to profile creation
-  if (!profile?.profile_completed) {
+  if (!profile?.profileCompleted) {
     return <Navigate to="/create-profile" replace />;
   }
 

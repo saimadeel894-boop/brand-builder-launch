@@ -1,13 +1,17 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { useFirebaseAuth } from "@/contexts/FirebaseAuthContext";
 import { OnboardingLayout } from "@/components/OnboardingLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, X } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import {
+  createManufacturerProfile,
+  createBrandProfile,
+  createInfluencerProfile,
+} from "@/services/firestore/profiles";
 import { z } from "zod";
 
 // Validation schemas
@@ -28,7 +32,7 @@ const influencerSchema = z.object({
 });
 
 export default function CreateProfile() {
-  const { profile, user, setProfileCompleted } = useAuth();
+  const { profile, user, setProfileCompleted } = useFirebaseAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -87,9 +91,8 @@ export default function CreateProfile() {
           return;
         }
 
-        const { error } = await supabase.from("manufacturer_profiles").insert({
-          user_id: user.id,
-          company_name: companyName,
+        const { error } = await createManufacturerProfile(user.uid, {
+          companyName,
           categories,
           certifications,
         });
@@ -107,9 +110,8 @@ export default function CreateProfile() {
           return;
         }
 
-        const { error } = await supabase.from("brand_profiles").insert({
-          user_id: user.id,
-          brand_name: brandName,
+        const { error } = await createBrandProfile(user.uid, {
+          brandName,
           industry,
         });
 
@@ -126,10 +128,9 @@ export default function CreateProfile() {
           return;
         }
 
-        const { error } = await supabase.from("influencer_profiles").insert({
-          user_id: user.id,
+        const { error } = await createInfluencerProfile(user.uid, {
           name,
-          primary_platform: primaryPlatform,
+          primaryPlatform,
         });
 
         if (error) throw error;

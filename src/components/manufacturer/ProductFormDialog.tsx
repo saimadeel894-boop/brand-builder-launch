@@ -43,8 +43,8 @@ export function ProductFormDialog({
     category: product?.category || "",
     description: product?.description || "",
     moq: product?.moq || "",
-    lead_time: product?.lead_time || "",
-    price_range: product?.price_range || "",
+    leadTime: product?.leadTime || "",
+    priceRange: product?.priceRange || "",
     images: product?.images || [],
     documents: product?.documents || [],
   });
@@ -56,7 +56,7 @@ export function ProductFormDialog({
 
     const data = isEditing
       ? formData
-      : { ...formData, manufacturer_id: manufacturerId };
+      : { ...formData, manufacturerId };
 
     const result = await onSubmit(data);
     setSaving(false);
@@ -69,8 +69,8 @@ export function ProductFormDialog({
         category: "",
         description: "",
         moq: "",
-        lead_time: "",
-        price_range: "",
+        leadTime: "",
+        priceRange: "",
         images: [],
         documents: [],
       });
@@ -184,23 +184,23 @@ export function ProductFormDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="lead_time">Lead Time</Label>
+              <Label htmlFor="leadTime">Lead Time</Label>
               <Input
-                id="lead_time"
-                value={formData.lead_time}
+                id="leadTime"
+                value={formData.leadTime}
                 onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, lead_time: e.target.value }))
+                  setFormData((prev) => ({ ...prev, leadTime: e.target.value }))
                 }
                 placeholder="e.g., 4-6 weeks"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="price_range">Price Range</Label>
+              <Label htmlFor="priceRange">Price Range</Label>
               <Input
-                id="price_range"
-                value={formData.price_range}
+                id="priceRange"
+                value={formData.priceRange}
                 onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, price_range: e.target.value }))
+                  setFormData((prev) => ({ ...prev, priceRange: e.target.value }))
                 }
                 placeholder="e.g., $5-10/unit"
               />

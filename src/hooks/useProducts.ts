@@ -1,37 +1,42 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { 
+  collection, 
+  doc, 
+  getDocs, 
+  addDoc, 
+  updateDoc, 
+  deleteDoc, 
+  query, 
+  where, 
+  orderBy, 
+  serverTimestamp 
+} from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 
 export interface Product {
   id: string;
-  manufacturer_id: string;
+  manufacturerId: string;
   name: string;
   category: string;
   description: string | null;
   moq: string | null;
-  lead_time: string | null;
-  price_range: string | null;
+  leadTime: string | null;
+  priceRange: string | null;
   images: string[];
   documents: string[];
-  created_at: string;
-  updated_at: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
-// Helper to normalize nullable arrays
-const normalizeProduct = (data: any): Product => ({
-  ...data,
-  images: data.images || [],
-  documents: data.documents || [],
-});
-
 export interface CreateProductData {
-  manufacturer_id: string;
+  manufacturerId: string;
   name: string;
   category: string;
   description?: string;
   moq?: string;
-  lead_time?: string;
-  price_range?: string;
+  leadTime?: string;
+  priceRange?: string;
   images?: string[];
   documents?: string[];
 }
@@ -42,17 +47,40 @@ export function useProducts(manufacturerId: string | undefined) {
   const [loading, setLoading] = useState(true);
 
   const fetchProducts = useCallback(async () => {
-    if (!manufacturerId) return;
+    if (!manufacturerId) {
+      setLoading(false);
+      return;
+    }
 
     try {
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .eq("manufacturer_id", manufacturerId)
-        .order("created_at", { ascending: false });
+      const q = query(
+        collection(db, "products"),
+        where("manufacturerId", "==", manufacturerId),
+        orderBy("createdAt", "desc")
+      );
 
-      if (error) throw error;
-      setProducts((data || []).map(normalizeProduct));
+      const querySnapshot = await getDocs(q);
+      const productsData: Product[] = [];
+      
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        productsData.push({
+          id: doc.id,
+          manufacturerId: data.manufacturerId,
+          name: data.name,
+          category: data.category,
+          description: data.description || null,
+          moq: data.moq || null,
+          leadTime: data.leadTime || null,
+          priceRange: data.priceRange || null,
+          images: data.images || [],
+          documents: data.documents || [],
+          createdAt: data.createdAt?.toDate(),
+          updatedAt: data.updatedAt?.toDate(),
+        });
+      });
+
+      setProducts(productsData);
     } catch (error: any) {
       console.error("Error fetching products:", error);
       toast({
@@ -71,21 +99,35 @@ export function useProducts(manufacturerId: string | undefined) {
 
   const createProduct = async (data: CreateProductData): Promise<Product | null> => {
     try {
-      const { data: product, error } = await supabase
-        .from("products")
-        .insert(data)
-        .select()
-        .single();
+      const docRef = await addDoc(collection(db, "products"), {
+        ...data,
+        images: data.images || [],
+        documents: data.documents || [],
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
 
-      if (error) throw error;
+      const newProduct: Product = {
+        id: docRef.id,
+        manufacturerId: data.manufacturerId,
+        name: data.name,
+        category: data.category,
+        description: data.description || null,
+        moq: data.moq || null,
+        leadTime: data.leadTime || null,
+        priceRange: data.priceRange || null,
+        images: data.images || [],
+        documents: data.documents || [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
 
-      const normalizedProduct = normalizeProduct(product);
-      setProducts((prev) => [normalizedProduct, ...prev]);
+      setProducts((prev) => [newProduct, ...prev]);
       toast({
         title: "Success",
         description: "Product created successfully",
       });
-      return normalizedProduct;
+      return newProduct;
     } catch (error: any) {
       console.error("Error creating product:", error);
       toast({
@@ -99,12 +141,10 @@ export function useProducts(manufacturerId: string | undefined) {
 
   const updateProduct = async (id: string, updates: Partial<Product>): Promise<boolean> => {
     try {
-      const { error } = await supabase
-        .from("products")
-        .update(updates)
-        .eq("id", id);
-
-      if (error) throw error;
+      await updateDoc(doc(db, "products", id), {
+        ...updates,
+        updatedAt: serverTimestamp(),
+      });
 
       setProducts((prev) =>
         prev.map((p) => (p.id === id ? { ...p, ...updates } : p))
@@ -127,9 +167,7 @@ export function useProducts(manufacturerId: string | undefined) {
 
   const deleteProduct = async (id: string): Promise<boolean> => {
     try {
-      const { error } = await supabase.from("products").delete().eq("id", id);
-
-      if (error) throw error;
+      await deleteDoc(doc(db, "products", id));
 
       setProducts((prev) => prev.filter((p) => p.id !== id));
       toast({

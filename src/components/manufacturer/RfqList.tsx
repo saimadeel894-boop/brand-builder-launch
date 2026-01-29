@@ -104,11 +104,11 @@ export function RfqList({ rfqs, loading }: RfqListProps) {
               {rfqs.map((rfq) => (
                 <TableRow key={rfq.id}>
                   <TableCell className="font-medium">{rfq.title}</TableCell>
-                  <TableCell>{rfq.brand_name}</TableCell>
+                  <TableCell>{rfq.brandName}</TableCell>
                   <TableCell>{rfq.category || "-"}</TableCell>
                   <TableCell>{getStatusBadge(rfq.status)}</TableCell>
                   <TableCell className="text-muted-foreground">
-                    {format(new Date(rfq.created_at), "MMM d, yyyy")}
+                    {rfq.createdAt ? format(rfq.createdAt, "MMM d, yyyy") : "-"}
                   </TableCell>
                   <TableCell>
                     {rfq.deadline ? (

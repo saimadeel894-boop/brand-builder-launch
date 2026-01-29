@@ -1,41 +1,56 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { useFirebaseAuth } from "@/contexts/FirebaseAuthContext";
 import { useToast } from "@/hooks/use-toast";
 
 export interface ManufacturerProfileData {
   id: string;
-  user_id: string;
-  company_name: string;
+  userId: string;
+  companyName: string;
   categories: string[];
   certifications: string[];
   moq: string | null;
-  lead_time: string | null;
+  leadTime: string | null;
   description: string | null;
   location: string | null;
   website: string | null;
-  created_at: string;
-  updated_at: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export function useManufacturerProfile() {
-  const { user } = useAuth();
+  const { user } = useFirebaseAuth();
   const { toast } = useToast();
   const [profile, setProfile] = useState<ManufacturerProfileData | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
     try {
-      const { data, error } = await supabase
-        .from("manufacturer_profiles")
-        .select("*")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (error) throw error;
-      setProfile(data);
+      const docSnap = await getDoc(doc(db, "manufacturerProfiles", user.uid));
+      
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setProfile({
+          id: user.uid,
+          userId: data.userId,
+          companyName: data.companyName,
+          categories: data.categories || [],
+          certifications: data.certifications || [],
+          moq: data.moq || null,
+          leadTime: data.leadTime || null,
+          description: data.description || null,
+          location: data.location || null,
+          website: data.website || null,
+          createdAt: data.createdAt?.toDate(),
+          updatedAt: data.updatedAt?.toDate(),
+        });
+      }
     } catch (error: any) {
       console.error("Error fetching manufacturer profile:", error);
       toast({
@@ -53,15 +68,13 @@ export function useManufacturerProfile() {
   }, [fetchProfile]);
 
   const updateProfile = async (updates: Partial<ManufacturerProfileData>) => {
-    if (!profile) return false;
+    if (!profile || !user) return false;
 
     try {
-      const { error } = await supabase
-        .from("manufacturer_profiles")
-        .update(updates)
-        .eq("id", profile.id);
-
-      if (error) throw error;
+      await updateDoc(doc(db, "manufacturerProfiles", user.uid), {
+        ...updates,
+        updatedAt: serverTimestamp(),
+      });
 
       setProfile({ ...profile, ...updates });
       toast({

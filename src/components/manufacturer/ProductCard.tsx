@@ -104,16 +104,16 @@ export function ProductCard({ product, onEdit, onDelete }: ProductCardProps) {
                 <span className="font-medium">{product.moq}</span>
               </div>
             )}
-            {product.lead_time && (
+            {product.leadTime && (
               <div>
                 <span className="text-muted-foreground">Lead:</span>{" "}
-                <span className="font-medium">{product.lead_time}</span>
+                <span className="font-medium">{product.leadTime}</span>
               </div>
             )}
-            {product.price_range && (
+            {product.priceRange && (
               <div className="col-span-2">
                 <span className="text-muted-foreground">Price:</span>{" "}
-                <span className="font-medium">{product.price_range}</span>
+                <span className="font-medium">{product.priceRange}</span>
               </div>
             )}
           </div>

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { useFirebaseAuth } from "@/contexts/FirebaseAuthContext";
 import { OnboardingLayout } from "@/components/OnboardingLayout";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -44,7 +44,7 @@ const roles: RoleOption[] = [
 export default function SelectRole() {
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [loading, setLoading] = useState(false);
-  const { updateRole } = useAuth();
+  const { updateRole } = useFirebaseAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 

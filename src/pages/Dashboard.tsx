@@ -1,12 +1,12 @@
 import { Navigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { useFirebaseAuth } from "@/contexts/FirebaseAuthContext";
 import { Loader2 } from "lucide-react";
 import ManufacturerDashboard from "./dashboard/ManufacturerDashboard";
 import BrandDashboard from "./dashboard/BrandDashboard";
 import InfluencerDashboard from "./dashboard/InfluencerDashboard";
 
 export default function Dashboard() {
-  const { profile, loading } = useAuth();
+  const { profile, loading } = useFirebaseAuth();
 
   if (loading) {
     return (
@@ -21,7 +21,7 @@ export default function Dashboard() {
     return <Navigate to="/select-role" replace />;
   }
 
-  if (!profile?.profile_completed) {
+  if (!profile?.profileCompleted) {
     return <Navigate to="/create-profile" replace />;
   }
 

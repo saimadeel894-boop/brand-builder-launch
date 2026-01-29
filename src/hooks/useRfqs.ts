@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { collection, getDocs, query, where, orderBy, doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 
 export interface Rfq {
   id: string;
-  brand_id: string;
-  manufacturer_id: string;
+  brandId: string;
+  manufacturerId: string;
   title: string;
   description: string | null;
   category: string | null;
@@ -13,9 +14,9 @@ export interface Rfq {
   budget: string | null;
   deadline: string | null;
   status: string;
-  created_at: string;
-  updated_at: string;
-  brand_name?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+  brandName?: string;
 }
 
 export function useRfqs(manufacturerId: string | undefined) {
@@ -24,28 +25,51 @@ export function useRfqs(manufacturerId: string | undefined) {
   const [loading, setLoading] = useState(true);
 
   const fetchRfqs = useCallback(async () => {
-    if (!manufacturerId) return;
+    if (!manufacturerId) {
+      setLoading(false);
+      return;
+    }
 
     try {
-      const { data, error } = await supabase
-        .from("rfqs")
-        .select(`
-          *,
-          brand_profiles (
-            brand_name
-          )
-        `)
-        .eq("manufacturer_id", manufacturerId)
-        .order("created_at", { ascending: false });
+      const q = query(
+        collection(db, "rfqs"),
+        where("manufacturerId", "==", manufacturerId),
+        orderBy("createdAt", "desc")
+      );
 
-      if (error) throw error;
+      const querySnapshot = await getDocs(q);
+      const rfqsData: Rfq[] = [];
 
-      const rfqsWithBrandName = (data || []).map((rfq: any) => ({
-        ...rfq,
-        brand_name: rfq.brand_profiles?.brand_name || "Unknown Brand",
-      }));
+      for (const docSnap of querySnapshot.docs) {
+        const data = docSnap.data();
+        
+        // Fetch brand name
+        let brandName = "Unknown Brand";
+        if (data.brandId) {
+          const brandDoc = await getDoc(doc(db, "brandProfiles", data.brandId));
+          if (brandDoc.exists()) {
+            brandName = brandDoc.data().brandName || "Unknown Brand";
+          }
+        }
 
-      setRfqs(rfqsWithBrandName);
+        rfqsData.push({
+          id: docSnap.id,
+          brandId: data.brandId,
+          manufacturerId: data.manufacturerId,
+          title: data.title,
+          description: data.description || null,
+          category: data.category || null,
+          quantity: data.quantity || null,
+          budget: data.budget || null,
+          deadline: data.deadline || null,
+          status: data.status || "pending",
+          createdAt: data.createdAt?.toDate(),
+          updatedAt: data.updatedAt?.toDate(),
+          brandName,
+        });
+      }
+
+      setRfqs(rfqsData);
     } catch (error: any) {
       console.error("Error fetching RFQs:", error);
       toast({

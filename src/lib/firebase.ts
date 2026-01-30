@@ -4,7 +4,7 @@ import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyA8IRS-mLEmdjkklw0y6gaDX0r9xVv4mM",
+  apiKey: "AIzaSyAb1RS-mLEMdmkjklwOyg6aDXor9xVv4mM",
   authDomain: "beautychain-ee044.firebaseapp.com",
   projectId: "beautychain-ee044",
   storageBucket: "beautychain-ee044.firebasestorage.app",

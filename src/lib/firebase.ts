@@ -3,32 +3,15 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
-const sanitizeEnv = (value: unknown) => {
-  if (typeof value !== "string") return "";
-  // Secrets sometimes get pasted with quotes or trailing whitespace/newlines.
-  return value.trim().replace(/^['"]+|['"]+$/g, "");
-};
-
 const firebaseConfig = {
-  apiKey: sanitizeEnv(import.meta.env.VITE_FIREBASE_API_KEY),
-  authDomain: sanitizeEnv(import.meta.env.VITE_FIREBASE_AUTH_DOMAIN),
-  projectId: sanitizeEnv(import.meta.env.VITE_FIREBASE_PROJECT_ID),
-  storageBucket: sanitizeEnv(import.meta.env.VITE_FIREBASE_STORAGE_BUCKET),
-  messagingSenderId: sanitizeEnv(import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID),
-  appId: sanitizeEnv(import.meta.env.VITE_FIREBASE_APP_ID),
+  apiKey: "AIzaSyA8IRS-mLEmdjkklw0y6gaDX0r9xVv4mM",
+  authDomain: "beautychain-ee044.firebaseapp.com",
+  projectId: "beautychain-ee044",
+  storageBucket: "beautychain-ee044.firebasestorage.app",
+  messagingSenderId: "615836312427",
+  appId: "1:615836312427:web:1bd823fa042e92c378a22e",
 };
 
-const missingKeys = Object.entries(firebaseConfig)
-  .filter(([, v]) => !v)
-  .map(([k]) => k);
-
-if (missingKeys.length > 0) {
-  console.error(
-    `[Firebase] Missing config values: ${missingKeys.join(
-      ", "
-    )}. Check your VITE_FIREBASE_* secrets.`
-  );
-}
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);

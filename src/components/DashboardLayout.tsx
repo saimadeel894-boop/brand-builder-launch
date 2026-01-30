@@ -2,6 +2,7 @@ import { ReactNode, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useFirebaseAuth } from "@/contexts/FirebaseAuthContext";
 import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/Logo";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -123,11 +124,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       >
         <div className="flex h-full flex-col">
           {/* Logo */}
-          <div className="flex h-16 items-center gap-2 border-b border-sidebar-border px-6">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <span className="text-sm font-bold text-primary-foreground">BC</span>
-            </div>
-            <span className="font-semibold text-sidebar-foreground">BeautyChain</span>
+          <div className="flex h-16 items-center border-b border-sidebar-border px-6">
+            <Link to="/dashboard">
+              <Logo size="sm" />
+            </Link>
           </div>
 
           {/* Navigation */}

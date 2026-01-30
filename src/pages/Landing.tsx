@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/Logo";
 import { User, Search, Sparkles, Factory, Building2, Users, ArrowRight } from "lucide-react";
 
 const howItWorks = [
@@ -44,12 +45,9 @@ export default function Landing() {
       {/* Header */}
       <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <span className="text-sm font-bold text-primary-foreground">BC</span>
-            </div>
-            <span className="font-semibold text-foreground">BeautyChain</span>
-          </div>
+          <Link to="/">
+            <Logo size="sm" />
+          </Link>
 
           <nav className="hidden md:flex items-center gap-6">
             <a href="#features" className="text-sm text-muted-foreground hover:text-foreground">Features</a>
@@ -227,12 +225,7 @@ export default function Landing() {
       <footer className="border-t border-border py-12">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                <span className="text-sm font-bold text-primary-foreground">BC</span>
-              </div>
-              <span className="font-semibold text-foreground">BeautyChain</span>
-            </div>
+            <Logo size="sm" />
 
             <nav className="flex items-center gap-6 text-sm text-muted-foreground">
               <a href="#" className="hover:text-foreground">About Us</a>

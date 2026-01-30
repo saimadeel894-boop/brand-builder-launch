@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { Logo } from "@/components/Logo";
 
 interface OnboardingLayoutProps {
   children: ReactNode;
@@ -20,11 +21,8 @@ export function OnboardingLayout({
     <div className="min-h-screen bg-secondary/30">
       <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6 lg:px-8">
         {/* Logo */}
-        <div className="mb-8 flex items-center justify-center gap-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">
-            <span className="text-lg font-bold text-primary-foreground">BC</span>
-          </div>
-          <span className="text-xl font-semibold text-foreground">BeautyChain</span>
+        <div className="mb-8 flex items-center justify-center">
+          <Logo size="lg" />
         </div>
 
         {/* Step indicator */}

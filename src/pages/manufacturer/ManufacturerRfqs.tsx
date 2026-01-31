@@ -6,7 +6,7 @@ import { Loader2 } from "lucide-react";
 
 export default function ManufacturerRfqs() {
   const { profile, loading: profileLoading } = useManufacturerProfile();
-  const { rfqs, loading: rfqsLoading } = useRfqs(profile?.id);
+  const { rfqs, loading: rfqsLoading, refetch } = useRfqs(profile?.id);
 
   if (profileLoading) {
     return (
@@ -35,12 +35,17 @@ export default function ManufacturerRfqs() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Requests for Quotation</h1>
           <p className="text-muted-foreground">
-            View incoming RFQs from brands ({rfqs.length} total)
+            View and respond to incoming RFQs from brands ({rfqs.length} total)
           </p>
         </div>
 
         {/* RFQ List */}
-        <RfqList rfqs={rfqs} loading={rfqsLoading} />
+        <RfqList 
+          rfqs={rfqs} 
+          loading={rfqsLoading} 
+          manufacturerId={profile.id}
+          onRefresh={refetch}
+        />
       </div>
     </DashboardLayout>
   );

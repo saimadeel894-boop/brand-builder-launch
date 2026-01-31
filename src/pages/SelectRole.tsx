@@ -60,7 +60,7 @@ export default function SelectRole() {
 
     setLoading(true);
 
-    const { error } = await updateRole(selectedRole);
+    const { error, profile } = await updateRole(selectedRole);
 
     if (error) {
       toast({
@@ -72,6 +72,8 @@ export default function SelectRole() {
       return;
     }
 
+    // Navigate only after profile is confirmed updated
+    setLoading(false);
     navigate("/create-profile");
   };
 

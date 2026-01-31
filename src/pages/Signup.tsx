@@ -43,7 +43,7 @@ export default function Signup() {
       return;
     }
 
-    const { error } = await signUp(email, password);
+    const { error, profile } = await signUp(email, password);
 
     if (error) {
       toast({
@@ -60,6 +60,8 @@ export default function Signup() {
       description: "Let's set up your profile.",
     });
 
+    // Navigate only after profile is confirmed
+    setLoading(false);
     navigate("/select-role");
   };
 

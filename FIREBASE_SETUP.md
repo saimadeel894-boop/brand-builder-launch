@@ -64,7 +64,7 @@ service cloud.firestore {
                                resource.data.manufacturerId == request.auth.uid;
     }
     
-    // RFQs - brands can create, manufacturers can read
+    // RFQs - brands can create, manufacturers can read and update status
     match /rfqs/{rfqId} {
       allow read: if request.auth != null && 
                     (resource.data.brandId == request.auth.uid || 
@@ -74,6 +74,15 @@ service cloud.firestore {
       allow update: if request.auth != null && 
                       (resource.data.brandId == request.auth.uid || 
                        resource.data.manufacturerId == request.auth.uid);
+    }
+    
+    // RFQ Responses - manufacturers can manage their own responses
+    match /rfqResponses/{rfqId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && 
+                      request.resource.data.manufacturerId == request.auth.uid;
+      allow update: if request.auth != null && 
+                      resource.data.manufacturerId == request.auth.uid;
     }
   }
 }
@@ -139,6 +148,28 @@ These can be created via the Firebase Console or by clicking the link in the err
 }
 ```
 
+### brandProfiles/{userId}
+```json
+{
+  "userId": "string",
+  "brandName": "string",
+  "industry": "string",
+  "createdAt": Timestamp,
+  "updatedAt": Timestamp
+}
+```
+
+### influencerProfiles/{userId}
+```json
+{
+  "userId": "string",
+  "name": "string",
+  "primaryPlatform": "string",
+  "createdAt": Timestamp,
+  "updatedAt": Timestamp
+}
+```
+
 ### products/{productId}
 ```json
 {
@@ -155,3 +186,39 @@ These can be created via the Firebase Console or by clicking the link in the err
   "updatedAt": Timestamp
 }
 ```
+
+### rfqs/{rfqId}
+```json
+{
+  "brandId": "userId",
+  "manufacturerId": "userId",
+  "title": "Request Title",
+  "description": "string",
+  "category": "Skincare",
+  "quantity": "5000 units",
+  "budget": "$50,000",
+  "deadline": "2024-06-01",
+  "status": "pending" | "in_review" | "accepted" | "rejected" | "completed",
+  "createdAt": Timestamp,
+  "updatedAt": Timestamp
+}
+```
+
+### rfqResponses/{rfqId}
+```json
+{
+  "rfqId": "string",
+  "manufacturerId": "userId",
+  "quotedPrice": "$8/unit",
+  "estimatedLeadTime": "4-6 weeks",
+  "message": "Detailed response message...",
+  "status": "draft" | "submitted",
+  "createdAt": Timestamp,
+  "updatedAt": Timestamp
+}
+```
+
+## Storage Structure
+
+- `product-images/{userId}/{folder}/{filename}` - Product marketing images (public read)
+- `documents/{userId}/{folder}/{filename}` - Private documents like certifications and formulations

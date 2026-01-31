@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -8,16 +9,31 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, Clock, Loader2 } from "lucide-react";
+import { FileText, Clock, Loader2, Eye } from "lucide-react";
 import { Rfq } from "@/hooks/useRfqs";
+import { RfqDetailDialog } from "./RfqDetailDialog";
 import { format } from "date-fns";
 
 interface RfqListProps {
   rfqs: Rfq[];
   loading: boolean;
+  manufacturerId?: string;
+  onRefresh?: () => void;
 }
 
-export function RfqList({ rfqs, loading }: RfqListProps) {
+export function RfqList({ rfqs, loading, manufacturerId, onRefresh }: RfqListProps) {
+  const [selectedRfq, setSelectedRfq] = useState<Rfq | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const handleRowClick = (rfq: Rfq) => {
+    setSelectedRfq(rfq);
+    setDialogOpen(true);
+  };
+
+  const handleStatusChange = () => {
+    onRefresh?.();
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "pending":
@@ -80,52 +96,72 @@ export function RfqList({ rfqs, loading }: RfqListProps) {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <FileText className="h-5 w-5" />
-          Incoming RFQs
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Title</TableHead>
-                <TableHead>Brand</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead>Deadline</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {rfqs.map((rfq) => (
-                <TableRow key={rfq.id}>
-                  <TableCell className="font-medium">{rfq.title}</TableCell>
-                  <TableCell>{rfq.brandName}</TableCell>
-                  <TableCell>{rfq.category || "-"}</TableCell>
-                  <TableCell>{getStatusBadge(rfq.status)}</TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {rfq.createdAt ? format(rfq.createdAt, "MMM d, yyyy") : "-"}
-                  </TableCell>
-                  <TableCell>
-                    {rfq.deadline ? (
-                      <div className="flex items-center gap-1 text-muted-foreground">
-                        <Clock className="h-3 w-3" />
-                        {format(new Date(rfq.deadline), "MMM d, yyyy")}
-                      </div>
-                    ) : (
-                      "-"
-                    )}
-                  </TableCell>
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            Incoming RFQs
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Title</TableHead>
+                  <TableHead>Brand</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Created</TableHead>
+                  <TableHead>Deadline</TableHead>
+                  <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
-    </Card>
+              </TableHeader>
+              <TableBody>
+                {rfqs.map((rfq) => (
+                  <TableRow
+                    key={rfq.id}
+                    className="cursor-pointer hover:bg-secondary/70"
+                    onClick={() => handleRowClick(rfq)}
+                  >
+                    <TableCell className="font-medium">{rfq.title}</TableCell>
+                    <TableCell>{rfq.brandName}</TableCell>
+                    <TableCell>{rfq.category || "-"}</TableCell>
+                    <TableCell>{getStatusBadge(rfq.status)}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {rfq.createdAt ? format(rfq.createdAt, "MMM d, yyyy") : "-"}
+                    </TableCell>
+                    <TableCell>
+                      {rfq.deadline ? (
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <Clock className="h-3 w-3" />
+                          {format(new Date(rfq.deadline), "MMM d, yyyy")}
+                        </div>
+                      ) : (
+                        "-"
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Eye className="h-4 w-4 text-muted-foreground" />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {manufacturerId && (
+        <RfqDetailDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          rfq={selectedRfq}
+          manufacturerId={manufacturerId}
+          onStatusChange={handleStatusChange}
+        />
+      )}
+    </>
   );
 }

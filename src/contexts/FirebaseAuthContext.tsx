@@ -23,11 +23,11 @@ interface FirebaseAuthContextType {
   user: User | null;
   profile: UserProfile | null;
   loading: boolean;
-  signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string) => Promise<{ error: Error | null; profile?: UserProfile | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
-  refreshProfile: () => Promise<void>;
-  updateRole: (role: UserRole) => Promise<{ error: Error | null }>;
+  refreshProfile: () => Promise<UserProfile | null>;
+  updateRole: (role: UserRole) => Promise<{ error: Error | null; profile?: UserProfile | null }>;
   setProfileCompleted: () => Promise<{ error: Error | null }>;
 }
 
@@ -40,7 +40,17 @@ export function FirebaseAuthProvider({ children }: { children: ReactNode }) {
 
   const fetchProfile = async (userId: string): Promise<UserProfile | null> => {
     try {
-      const userDoc = await getDoc(doc(db, "users", userId));
+      console.log("Fetching profile for user:", userId);
+      
+      // Add a timeout to prevent hanging
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error("Profile fetch timeout")), 10000);
+      });
+      
+      const fetchPromise = getDoc(doc(db, "users", userId));
+      const userDoc = await Promise.race([fetchPromise, timeoutPromise]);
+      
+      console.log("User doc exists:", userDoc.exists());
       if (userDoc.exists()) {
         const data = userDoc.data();
         return {
@@ -51,6 +61,7 @@ export function FirebaseAuthProvider({ children }: { children: ReactNode }) {
           createdAt: data.createdAt?.toDate(),
         };
       }
+      console.log("No user document found, returning null");
       return null;
     } catch (error) {
       console.error("Error fetching profile:", error);
@@ -58,11 +69,13 @@ export function FirebaseAuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const refreshProfile = async () => {
+  const refreshProfile = async (): Promise<UserProfile | null> => {
     if (user) {
       const profileData = await fetchProfile(user.uid);
       setProfile(profileData);
+      return profileData;
     }
+    return null;
   };
 
   useEffect(() => {
@@ -70,8 +83,13 @@ export function FirebaseAuthProvider({ children }: { children: ReactNode }) {
       setUser(firebaseUser);
 
       if (firebaseUser) {
-        const profileData = await fetchProfile(firebaseUser.uid);
-        setProfile(profileData);
+        try {
+          const profileData = await fetchProfile(firebaseUser.uid);
+          setProfile(profileData);
+        } catch (error) {
+          console.error("Error in auth state change:", error);
+          setProfile(null);
+        }
       } else {
         setProfile(null);
       }
@@ -82,7 +100,7 @@ export function FirebaseAuthProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string): Promise<{ error: Error | null; profile?: UserProfile | null }> => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const newUser = userCredential.user;
@@ -95,7 +113,14 @@ export function FirebaseAuthProvider({ children }: { children: ReactNode }) {
         createdAt: serverTimestamp(),
       });
 
-      return { error: null };
+      // Set the user state immediately
+      setUser(newUser);
+      
+      // Fetch and set profile immediately
+      const profileData = await fetchProfile(newUser.uid);
+      setProfile(profileData);
+
+      return { error: null, profile: profileData };
     } catch (error) {
       return { error: error as Error };
     }
@@ -116,14 +141,30 @@ export function FirebaseAuthProvider({ children }: { children: ReactNode }) {
     setProfile(null);
   };
 
-  const updateRole = async (role: UserRole) => {
+  const updateRole = async (role: UserRole): Promise<{ error: Error | null; profile?: UserProfile | null }> => {
     if (!user) return { error: new Error("No user logged in") };
 
     try {
-      await updateDoc(doc(db, "users", user.uid), { role });
-      await refreshProfile();
-      return { error: null };
+      console.log("Updating role to:", role);
+      
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error("Update role timeout")), 10000);
+      });
+      
+      // Use setDoc with merge to create document if it doesn't exist
+      const updatePromise = setDoc(doc(db, "users", user.uid), { 
+        role,
+        email: user.email,
+      }, { merge: true });
+      
+      await Promise.race([updatePromise, timeoutPromise]);
+      console.log("Role updated successfully");
+      
+      const updatedProfile = await refreshProfile();
+      return { error: null, profile: updatedProfile };
     } catch (error) {
+      console.error("Error updating role:", error);
       return { error: error as Error };
     }
   };

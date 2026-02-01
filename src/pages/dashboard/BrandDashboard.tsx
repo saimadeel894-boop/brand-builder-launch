@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useFirebaseAuth } from "@/contexts/FirebaseAuthContext";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { supabase } from "@/integrations/supabase/client";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import { 
   Building2, 
   CheckCircle, 
@@ -13,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 interface BrandProfile {
-  brand_name: string;
+  brandName: string;
   industry: string;
 }
 
@@ -36,21 +37,24 @@ const mockTasks = [
 ];
 
 export default function BrandDashboard() {
-  const { user, profile: authProfile } = useAuth();
+  const { user, profile: authProfile } = useFirebaseAuth();
   const [profile, setProfile] = useState<BrandProfile | null>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
       if (!user) return;
 
-      const { data } = await supabase
-        .from("brand_profiles")
-        .select("*")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (data) {
-        setProfile(data);
+      try {
+        const profileDoc = await getDoc(doc(db, "brandProfiles", user.uid));
+        if (profileDoc.exists()) {
+          const data = profileDoc.data();
+          setProfile({
+            brandName: data.brandName,
+            industry: data.industry,
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching brand profile:", error);
       }
     };
 
@@ -84,7 +88,7 @@ export default function BrandDashboard() {
           {/* Welcome section */}
           <div>
             <h1 className="text-2xl font-bold text-foreground">
-              Welcome back, {profile?.brand_name || authProfile?.email?.split("@")[0] || "User"}!
+              Welcome back, {profile?.brandName || authProfile?.email?.split("@")[0] || "User"}!
             </h1>
             <p className="mt-1 text-muted-foreground">
               Here's a summary of your campaigns and partnerships.
@@ -145,7 +149,7 @@ export default function BrandDashboard() {
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <div>
                 <span className="text-sm text-muted-foreground">Brand Name</span>
-                <p className="font-medium text-foreground">{profile?.brand_name || "-"}</p>
+                <p className="font-medium text-foreground">{profile?.brandName || "-"}</p>
               </div>
               <div>
                 <span className="text-sm text-muted-foreground">Industry</span>

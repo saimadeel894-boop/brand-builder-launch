@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useFirebaseAuth } from "@/contexts/FirebaseAuthContext";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { supabase } from "@/integrations/supabase/client";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import { 
   Users, 
   CheckCircle, 
@@ -15,7 +16,7 @@ import { Button } from "@/components/ui/button";
 
 interface InfluencerProfile {
   name: string;
-  primary_platform: string;
+  primaryPlatform: string;
 }
 
 // Mock data for demonstration
@@ -37,21 +38,24 @@ const mockTasks = [
 ];
 
 export default function InfluencerDashboard() {
-  const { user, profile: authProfile } = useAuth();
+  const { user, profile: authProfile } = useFirebaseAuth();
   const [profile, setProfile] = useState<InfluencerProfile | null>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
       if (!user) return;
 
-      const { data } = await supabase
-        .from("influencer_profiles")
-        .select("*")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (data) {
-        setProfile(data);
+      try {
+        const profileDoc = await getDoc(doc(db, "influencerProfiles", user.uid));
+        if (profileDoc.exists()) {
+          const data = profileDoc.data();
+          setProfile({
+            name: data.name,
+            primaryPlatform: data.primaryPlatform,
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching influencer profile:", error);
       }
     };
 
@@ -150,7 +154,7 @@ export default function InfluencerDashboard() {
               </div>
               <div>
                 <span className="text-sm text-muted-foreground">Primary Platform</span>
-                <p className="font-medium text-foreground">{profile?.primary_platform || "-"}</p>
+                <p className="font-medium text-foreground">{profile?.primaryPlatform || "-"}</p>
               </div>
             </div>
           </div>

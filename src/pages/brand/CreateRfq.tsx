@@ -149,13 +149,27 @@ export default function CreateRfq() {
         status: asDraft ? "draft" : "sent",
       });
 
-      // Upload attachments
+      // Upload attachments one by one to better handle errors
       if (attachments.length > 0) {
-        const uploadPromises = attachments.map((file) =>
-          uploadRfqAttachment(user.uid, rfqId, file)
-        );
-        const urls = await Promise.all(uploadPromises);
-        await addAttachmentsToRfq(rfqId, urls);
+        const urls: string[] = [];
+        for (const file of attachments) {
+          try {
+            console.log("Uploading file:", file.name, "Size:", file.size);
+            const url = await uploadRfqAttachment(user.uid, rfqId, file);
+            urls.push(url);
+          } catch (uploadError: any) {
+            console.error("Failed to upload file:", file.name, uploadError);
+            toast({
+              title: "Upload Error",
+              description: `Failed to upload ${file.name}: ${uploadError.message}`,
+              variant: "destructive",
+            });
+            // Continue with other files
+          }
+        }
+        if (urls.length > 0) {
+          await addAttachmentsToRfq(rfqId, urls);
+        }
       }
 
       toast({

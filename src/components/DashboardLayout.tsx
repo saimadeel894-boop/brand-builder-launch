@@ -83,10 +83,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       case "brand":
         return [
           ...baseNav,
-          { name: "Collaborations", href: "/collaborations", icon: Diamond, disabled: true },
+          { name: "Find Manufacturers", href: "/brand/manufacturers", icon: Factory },
+          { name: "My RFQs", href: "/brand/rfqs", icon: FileText },
           { name: "Messages", href: "/messages", icon: MessageSquare, disabled: true },
-          { name: "Manufacturers", href: "/manufacturers", icon: Factory, disabled: true },
-          { name: "Influencers", href: "/influencers", icon: Users, disabled: true },
           { name: "Analytics", href: "/analytics", icon: TrendingUp, disabled: true },
         ];
       case "influencer":

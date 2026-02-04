@@ -1,16 +1,19 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useFirebaseAuth } from "@/contexts/FirebaseAuthContext";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { useBrandRfqs } from "@/hooks/useBrandRfqs";
+import { RfqStatusBadge } from "@/components/brand/RfqStatusBadge";
 import { 
   Building2, 
-  CheckCircle, 
-  Mail, 
-  AlertCircle,
+  FileText,
+  Factory,
+  Plus,
   ArrowRight,
+  Search,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 interface BrandProfile {
@@ -18,27 +21,10 @@ interface BrandProfile {
   industry: string;
 }
 
-// Mock data for demonstration
-const mockCollaborations = [
-  { id: 1, name: "Summer Collection Campaign", collaborator: "Pure Labs Mfg.", status: "In Progress", dueDate: "2024-08-20" },
-  { id: 2, name: "Influencer Partnership Q3", collaborator: "Sarah Jenkins", status: "Review", dueDate: "2024-08-01" },
-  { id: 3, name: "New Product Launch", collaborator: "GreenT Formulators", status: "Completed", dueDate: "2024-07-15" },
-];
-
-const mockActivityFeed = [
-  { id: 1, type: "success", message: "Campaign 'Summer Collection' approved.", time: "1 hour ago", icon: CheckCircle },
-  { id: 2, type: "message", message: "New quote from Pure Labs Mfg.", time: "3 hours ago", icon: Mail },
-  { id: 3, type: "request", message: "Sarah Jenkins wants to collaborate.", time: "1 day ago", icon: AlertCircle },
-];
-
-const mockTasks = [
-  { id: 1, name: "Review influencer proposals", due: "Today" },
-  { id: 2, name: "Finalize Q3 budget", due: "2024-08-05" },
-];
-
 export default function BrandDashboard() {
   const { user, profile: authProfile } = useFirebaseAuth();
   const [profile, setProfile] = useState<BrandProfile | null>(null);
+  const { rfqs, loading: rfqsLoading } = useBrandRfqs(user?.uid);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -61,24 +47,19 @@ export default function BrandDashboard() {
     fetchProfile();
   }, [user]);
 
+  // Calculate stats from real data
+  const sentRfqs = rfqs.filter((r) => r.status !== "draft").length;
+  const draftRfqs = rfqs.filter((r) => r.status === "draft").length;
+  const respondedRfqs = rfqs.filter((r) => ["responded", "accepted", "completed"].includes(r.status)).length;
+
   const stats = [
-    { label: "Active Campaigns", value: "8", change: "+12%", changeType: "positive" },
-    { label: "Unread Messages", value: "3", change: "+2%", changeType: "positive" },
-    { label: "Pending Approvals", value: "5", change: "-1%", changeType: "neutral" },
+    { label: "Sent RFQs", value: sentRfqs.toString(), icon: FileText },
+    { label: "Drafts", value: draftRfqs.toString(), icon: FileText },
+    { label: "Responses", value: respondedRfqs.toString(), icon: FileText },
   ];
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "In Progress":
-        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">In Progress</Badge>;
-      case "Completed":
-        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Completed</Badge>;
-      case "Review":
-        return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">Review</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
+  // Get recent RFQs (up to 5)
+  const recentRfqs = rfqs.slice(0, 5);
 
   return (
     <DashboardLayout>
@@ -86,61 +67,105 @@ export default function BrandDashboard() {
         {/* Main content */}
         <div className="flex-1 space-y-8">
           {/* Welcome section */}
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">
-              Welcome back, {profile?.brandName || authProfile?.email?.split("@")[0] || "User"}!
-            </h1>
-            <p className="mt-1 text-muted-foreground">
-              Here's a summary of your campaigns and partnerships.
-            </p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">
+                Welcome back, {profile?.brandName || authProfile?.email?.split("@")[0] || "User"}!
+              </h1>
+              <p className="mt-1 text-muted-foreground">
+                Here's a summary of your manufacturer partnerships.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" asChild>
+                <Link to="/brand/manufacturers">
+                  <Search className="mr-2 h-4 w-4" />
+                  Find Manufacturers
+                </Link>
+              </Button>
+              <Button asChild>
+                <Link to="/brand/rfqs/create">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create RFQ
+                </Link>
+              </Button>
+            </div>
           </div>
 
           {/* Stats grid */}
           <div className="grid gap-4 sm:grid-cols-3">
-            {stats.map((stat) => (
-              <div key={stat.label} className="stat-card">
-                <span className="text-sm text-muted-foreground">{stat.label}</span>
-                <div className="mt-2 flex items-baseline gap-2">
-                  <span className="text-3xl font-bold text-foreground">{stat.value}</span>
-                  <span className={`text-sm ${stat.changeType === "positive" ? "text-success" : "text-muted-foreground"}`}>
-                    {stat.change}
-                  </span>
+            {stats.map((stat) => {
+              const Icon = stat.icon;
+              return (
+                <div key={stat.label} className="stat-card">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                      <Icon className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <span className="text-sm text-muted-foreground">{stat.label}</span>
+                      <p className="text-2xl font-bold text-foreground">{stat.value}</p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
-          {/* Ongoing Collaborations */}
+          {/* Recent RFQs */}
           <div className="bg-card rounded-xl border shadow-sm">
-            <div className="p-6 border-b border-border">
-              <h2 className="text-lg font-semibold text-foreground">Ongoing Campaigns</h2>
+            <div className="flex items-center justify-between p-6 border-b border-border">
+              <h2 className="text-lg font-semibold text-foreground">Recent RFQs</h2>
+              <Button variant="link" asChild className="p-0 h-auto">
+                <Link to="/brand/rfqs">
+                  View All
+                  <ArrowRight className="ml-1 h-4 w-4" />
+                </Link>
+              </Button>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-border">
-                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Campaign Name</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Partner</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Due Date</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {mockCollaborations.map((collab) => (
-                    <tr key={collab.id} className="hover:bg-secondary/50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">{collab.name}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{collab.collaborator}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(collab.status)}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{collab.dueDate}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <Button variant="link" className="text-primary p-0 h-auto">View</Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            
+            {rfqsLoading ? (
+              <div className="p-6 text-center text-muted-foreground">
+                Loading...
+              </div>
+            ) : recentRfqs.length === 0 ? (
+              <div className="p-8 text-center">
+                <FileText className="mx-auto h-12 w-12 text-muted-foreground" />
+                <h3 className="mt-4 font-semibold text-foreground">No RFQs Yet</h3>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Start by finding manufacturers and creating your first RFQ
+                </p>
+                <Button asChild className="mt-4">
+                  <Link to="/brand/manufacturers">
+                    Browse Manufacturers
+                  </Link>
+                </Button>
+              </div>
+            ) : (
+              <div className="divide-y divide-border">
+                {recentRfqs.map((rfq) => (
+                  <div key={rfq.id} className="flex items-center justify-between p-4 hover:bg-muted/30">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                        <FileText className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground">{rfq.title}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {rfq.manufacturerName} • {rfq.category || "No category"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <RfqStatusBadge status={rfq.status} />
+                      <Button variant="ghost" size="sm" asChild>
+                        <Link to="/brand/rfqs">View</Link>
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Profile summary */}
@@ -161,48 +186,62 @@ export default function BrandDashboard() {
 
         {/* Right sidebar */}
         <div className="w-full xl:w-80 space-y-6">
-          {/* Activity Feed */}
+          {/* Quick Actions */}
           <div className="bg-card rounded-xl border shadow-sm p-6">
-            <h3 className="font-semibold text-foreground mb-4">Activity Feed</h3>
-            <div className="space-y-4">
-              {mockActivityFeed.map((activity) => {
-                const Icon = activity.icon;
-                return (
-                  <div key={activity.id} className="flex gap-3">
-                    <div className={`flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center ${
-                      activity.type === "success" ? "bg-green-100" :
-                      activity.type === "message" ? "bg-blue-100" :
-                      "bg-yellow-100"
-                    }`}>
-                      <Icon className={`h-4 w-4 ${
-                        activity.type === "success" ? "text-green-600" :
-                        activity.type === "message" ? "text-blue-600" :
-                        "text-yellow-600"
-                      }`} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-foreground">{activity.message}</p>
-                      <p className="text-xs text-muted-foreground">{activity.time}</p>
-                    </div>
-                  </div>
-                );
-              })}
+            <h3 className="font-semibold text-foreground mb-4">Quick Actions</h3>
+            <div className="space-y-3">
+              <Button asChild variant="outline" className="w-full justify-start">
+                <Link to="/brand/manufacturers">
+                  <Factory className="mr-3 h-4 w-4 text-manufacturer" />
+                  Browse Manufacturers
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full justify-start">
+                <Link to="/brand/rfqs/create">
+                  <Plus className="mr-3 h-4 w-4 text-primary" />
+                  Create New RFQ
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full justify-start">
+                <Link to="/brand/rfqs">
+                  <FileText className="mr-3 h-4 w-4 text-primary" />
+                  View All RFQs
+                </Link>
+              </Button>
             </div>
           </div>
 
-          {/* Pending Tasks */}
-          <div className="bg-card rounded-xl border shadow-sm p-6">
-            <h3 className="font-semibold text-foreground mb-4">Pending Tasks</h3>
-            <div className="space-y-3">
-              {mockTasks.map((task) => (
-                <div key={task.id} className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
-                  <div>
-                    <p className="text-sm font-medium text-foreground">{task.name}</p>
-                    <p className="text-xs text-muted-foreground">Due: {task.due}</p>
-                  </div>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground" />
+          {/* Getting Started Guide */}
+          <div className="bg-primary/5 rounded-xl border border-primary/20 p-6">
+            <h3 className="font-semibold text-foreground mb-3">Getting Started</h3>
+            <div className="space-y-3 text-sm">
+              <div className="flex items-start gap-3">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-medium">
+                  1
                 </div>
-              ))}
+                <div>
+                  <p className="font-medium text-foreground">Browse Manufacturers</p>
+                  <p className="text-muted-foreground">Find the right partner for your products</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-medium">
+                  2
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">Create an RFQ</p>
+                  <p className="text-muted-foreground">Specify your requirements and send requests</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-medium">
+                  3
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">Review Responses</p>
+                  <p className="text-muted-foreground">Compare quotes and choose your manufacturer</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>

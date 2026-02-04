@@ -39,14 +39,27 @@ export async function uploadRfqAttachment(
   rfqId: string,
   file: File
 ): Promise<string> {
-  const timestamp = Date.now();
-  const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-  const path = `rfq-attachments/${brandId}/${rfqId}/${timestamp}_${safeName}`;
-  
-  const storageRef = ref(storage, path);
-  await uploadBytes(storageRef, file);
-  
-  return getDownloadURL(storageRef);
+  try {
+    const timestamp = Date.now();
+    const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
+    const path = `rfq-attachments/${brandId}/${rfqId}/${timestamp}_${safeName}`;
+    
+    console.log("Uploading file to path:", path);
+    
+    const storageRef = ref(storage, path);
+    const snapshot = await uploadBytes(storageRef, file);
+    console.log("Upload successful:", snapshot.metadata.fullPath);
+    
+    const downloadUrl = await getDownloadURL(storageRef);
+    console.log("Download URL obtained:", downloadUrl);
+    
+    return downloadUrl;
+  } catch (error: any) {
+    console.error("Firebase Storage upload error:", error);
+    console.error("Error code:", error.code);
+    console.error("Error message:", error.message);
+    throw new Error(`Failed to upload file: ${error.message || 'Unknown error'}`);
+  }
 }
 
 export async function addAttachmentsToRfq(rfqId: string, attachmentUrls: string[]): Promise<void> {

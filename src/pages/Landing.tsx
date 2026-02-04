@@ -236,7 +236,7 @@ export default function Landing() {
           </div>
 
           <div className="mt-8 text-center text-sm text-muted-foreground">
-            © 2024 BeautyChain. All rights reserved.
+            © {new Date().getFullYear()} BeautyChain. All rights reserved.
           </div>
         </div>
       </footer>

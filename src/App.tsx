@@ -20,6 +20,12 @@ import ManufacturerProfile from "./pages/manufacturer/ManufacturerProfile";
 import ManufacturerProducts from "./pages/manufacturer/ManufacturerProducts";
 import ManufacturerRfqs from "./pages/manufacturer/ManufacturerRfqs";
 
+// Brand Pages
+import ManufacturerDiscovery from "./pages/brand/ManufacturerDiscovery";
+import ManufacturerProfileView from "./pages/brand/ManufacturerProfileView";
+import BrandRfqs from "./pages/brand/BrandRfqs";
+import CreateRfq from "./pages/brand/CreateRfq";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -85,6 +91,40 @@ const App = () => (
               element={
                 <ProtectedRoute requireRole requireProfile>
                   <ManufacturerRfqs />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Brand routes */}
+            <Route
+              path="/brand/manufacturers"
+              element={
+                <ProtectedRoute requireRole requireProfile>
+                  <ManufacturerDiscovery />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/brand/manufacturers/:manufacturerId"
+              element={
+                <ProtectedRoute requireRole requireProfile>
+                  <ManufacturerProfileView />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/brand/rfqs"
+              element={
+                <ProtectedRoute requireRole requireProfile>
+                  <BrandRfqs />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/brand/rfqs/create"
+              element={
+                <ProtectedRoute requireRole requireProfile>
+                  <CreateRfq />
                 </ProtectedRoute>
               }
             />

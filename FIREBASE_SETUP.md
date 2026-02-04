@@ -106,6 +106,12 @@ service firebase.storage {
     match /documents/{userId}/{allPaths=**} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
+    
+    // RFQ attachments - brand can write, manufacturer can read
+    match /rfq-attachments/{brandId}/{rfqId}/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == brandId;
+    }
   }
 }
 ```
@@ -116,6 +122,8 @@ If you encounter index errors, create composite indexes for:
 
 1. `products` collection: `manufacturerId` (ASC) + `createdAt` (DESC)
 2. `rfqs` collection: `manufacturerId` (ASC) + `createdAt` (DESC)
+3. `rfqs` collection: `brandId` (ASC) + `createdAt` (DESC)
+4. `manufacturerProfiles` collection: `companyName` (ASC)
 
 These can be created via the Firebase Console or by clicking the link in the error message.
 
@@ -222,3 +230,4 @@ These can be created via the Firebase Console or by clicking the link in the err
 
 - `product-images/{userId}/{folder}/{filename}` - Product marketing images (public read)
 - `documents/{userId}/{folder}/{filename}` - Private documents like certifications and formulations
+- `rfq-attachments/{brandId}/{rfqId}/{filename}` - RFQ file attachments (brand writes, manufacturer reads)

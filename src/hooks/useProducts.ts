@@ -20,9 +20,12 @@ export interface Product {
   name: string;
   category: string;
   description: string | null;
-  moq: string | null;
-  leadTime: string | null;
-  priceRange: string | null;
+  moq?: number | null;
+  moqUnit?: string | null;
+  leadTime?: number | null;
+  leadTimeUnit?: "days" | "weeks" | "months" | null;
+  price?: number | null;
+  currency?: "USD" | "EUR" | "JPY" | "CNY" | "KRW" | null;
   images: string[];
   documents: string[];
   createdAt?: Date;
@@ -34,9 +37,12 @@ export interface CreateProductData {
   name: string;
   category: string;
   description?: string;
-  moq?: string;
-  leadTime?: string;
-  priceRange?: string;
+  moq?: number;
+  moqUnit?: string;
+  leadTime?: number;
+  leadTimeUnit?: "days" | "weeks" | "months";
+  price?: number;
+  currency?: "USD" | "EUR" | "JPY" | "CNY" | "KRW";
   images?: string[];
   documents?: string[];
 }
@@ -70,9 +76,12 @@ export function useProducts(manufacturerId: string | undefined) {
           name: data.name,
           category: data.category,
           description: data.description || null,
-          moq: data.moq || null,
-          leadTime: data.leadTime || null,
-          priceRange: data.priceRange || null,
+          moq: data.moq ?? null,
+          moqUnit: data.moqUnit || null,
+          leadTime: data.leadTime ?? null,
+          leadTimeUnit: data.leadTimeUnit || null,
+          price: data.price ?? null,
+          currency: data.currency || null,
           images: data.images || [],
           documents: data.documents || [],
           createdAt: data.createdAt?.toDate(),
@@ -113,9 +122,12 @@ export function useProducts(manufacturerId: string | undefined) {
         name: data.name,
         category: data.category,
         description: data.description || null,
-        moq: data.moq || null,
-        leadTime: data.leadTime || null,
-        priceRange: data.priceRange || null,
+        moq: data.moq ?? null,
+        moqUnit: data.moqUnit || null,
+        leadTime: data.leadTime ?? null,
+        leadTimeUnit: data.leadTimeUnit || null,
+        price: data.price ?? null,
+        currency: data.currency || null,
         images: data.images || [],
         documents: data.documents || [],
         createdAt: new Date(),

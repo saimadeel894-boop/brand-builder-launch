@@ -5,8 +5,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { X, Plus, Loader2, Save } from "lucide-react";
+import { X, Loader2, Save } from "lucide-react";
 import { ManufacturerProfileData } from "@/hooks/useManufacturerProfile";
+import { 
+  MoqInput, 
+  LeadTimeInput, 
+  PriceInput,
+  LeadTimeUnit,
+  Currency
+} from "@/components/ui/unit-input";
 
 interface ProfileEditFormProps {
   profile: ManufacturerProfileData;
@@ -27,11 +34,16 @@ const CERTIFICATION_OPTIONS = [
 export function ProfileEditForm({ profile, onSave, onCancel }: ProfileEditFormProps) {
   const [formData, setFormData] = useState({
     companyName: profile.companyName,
+    firstName: profile.firstName || "",
+    lastName: profile.lastName || "",
     description: profile.description || "",
     location: profile.location || "",
     website: profile.website || "",
-    moq: profile.moq || "",
-    leadTime: profile.leadTime || "",
+    moq: profile.moq ?? undefined,
+    leadTime: profile.leadTime ?? undefined,
+    leadTimeUnit: (profile.leadTimeUnit || "weeks") as LeadTimeUnit,
+    price: profile.price ?? undefined,
+    currency: (profile.currency || "USD") as Currency,
     categories: [...profile.categories],
     certifications: [...profile.certifications],
   });
@@ -42,7 +54,24 @@ export function ProfileEditForm({ profile, onSave, onCancel }: ProfileEditFormPr
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    const success = await onSave(formData);
+    
+    const updates: Partial<ManufacturerProfileData> = {
+      companyName: formData.companyName,
+      firstName: formData.firstName || null,
+      lastName: formData.lastName || null,
+      description: formData.description || null,
+      location: formData.location || null,
+      website: formData.website || null,
+      moq: formData.moq ?? null,
+      leadTime: formData.leadTime ?? null,
+      leadTimeUnit: formData.leadTimeUnit,
+      price: formData.price ?? null,
+      currency: formData.currency,
+      categories: formData.categories,
+      certifications: formData.certifications,
+    };
+    
+    const success = await onSave(updates);
     setSaving(false);
     if (success) onCancel();
   };
@@ -88,7 +117,33 @@ export function ProfileEditForm({ profile, onSave, onCancel }: ProfileEditFormPr
           <CardTitle>Edit Profile</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Basic Info */}
+          {/* Personal Info */}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="firstName">First Name</Label>
+              <Input
+                id="firstName"
+                value={formData.firstName}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, firstName: e.target.value }))
+                }
+                placeholder="Your first name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lastName">Last Name</Label>
+              <Input
+                id="lastName"
+                value={formData.lastName}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, lastName: e.target.value }))
+                }
+                placeholder="Your last name"
+              />
+            </div>
+          </div>
+
+          {/* Company Info */}
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="companyName">Company Name</Label>
@@ -140,30 +195,24 @@ export function ProfileEditForm({ profile, onSave, onCancel }: ProfileEditFormPr
             />
           </div>
 
-          {/* MOQ and Lead Time */}
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="moq">Minimum Order Quantity (MOQ)</Label>
-              <Input
-                id="moq"
-                value={formData.moq}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, moq: e.target.value }))
-                }
-                placeholder="e.g., 1000 units"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="leadTime">Lead Time</Label>
-              <Input
-                id="leadTime"
-                value={formData.leadTime}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, leadTime: e.target.value }))
-                }
-                placeholder="e.g., 4-6 weeks"
-              />
-            </div>
+          {/* MOQ, Lead Time, Price with structured inputs */}
+          <div className="grid gap-4 sm:grid-cols-3">
+            <MoqInput
+              value={formData.moq}
+              onChange={(value) => setFormData((prev) => ({ ...prev, moq: value }))}
+            />
+            <LeadTimeInput
+              value={formData.leadTime}
+              unit={formData.leadTimeUnit}
+              onValueChange={(value) => setFormData((prev) => ({ ...prev, leadTime: value }))}
+              onUnitChange={(unit) => setFormData((prev) => ({ ...prev, leadTimeUnit: unit }))}
+            />
+            <PriceInput
+              value={formData.price}
+              currency={formData.currency}
+              onValueChange={(value) => setFormData((prev) => ({ ...prev, price: value }))}
+              onCurrencyChange={(currency) => setFormData((prev) => ({ ...prev, currency }))}
+            />
           </div>
 
           {/* Categories */}

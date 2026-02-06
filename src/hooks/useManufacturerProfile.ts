@@ -8,13 +8,20 @@ export interface ManufacturerProfileData {
   id: string;
   userId: string;
   companyName: string;
+  firstName?: string | null;
+  lastName?: string | null;
   categories: string[];
   certifications: string[];
-  moq: string | null;
-  leadTime: string | null;
+  moq?: number | null;
+  moqUnit?: string | null;
+  leadTime?: number | null;
+  leadTimeUnit?: "days" | "weeks" | "months" | null;
+  price?: number | null;
+  currency?: "USD" | "EUR" | "JPY" | "CNY" | "KRW" | null;
   description: string | null;
   location: string | null;
   website: string | null;
+  companyId?: string | null;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -40,13 +47,20 @@ export function useManufacturerProfile() {
           id: user.uid,
           userId: data.userId,
           companyName: data.companyName,
+          firstName: data.firstName || null,
+          lastName: data.lastName || null,
           categories: data.categories || [],
           certifications: data.certifications || [],
-          moq: data.moq || null,
-          leadTime: data.leadTime || null,
+          moq: data.moq ?? null,
+          moqUnit: data.moqUnit || null,
+          leadTime: data.leadTime ?? null,
+          leadTimeUnit: data.leadTimeUnit || null,
+          price: data.price ?? null,
+          currency: data.currency || null,
           description: data.description || null,
           location: data.location || null,
           website: data.website || null,
+          companyId: data.companyId || null,
           createdAt: data.createdAt?.toDate(),
           updatedAt: data.updatedAt?.toDate(),
         });

@@ -42,7 +42,9 @@ export async function uploadRfqAttachment(
   try {
     const timestamp = Date.now();
     const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-    const path = `rfq-attachments/${brandId}/${rfqId}/${timestamp}_${safeName}`;
+
+    // Keep paths flat (rfq-attachments/{brandId}/{file}) to be compatible with common Storage rules
+    const path = `rfq-attachments/${brandId}/${rfqId}_${timestamp}_${safeName}`;
     
     console.log("Uploading file to path:", path);
     

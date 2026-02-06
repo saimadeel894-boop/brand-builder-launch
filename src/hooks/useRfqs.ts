@@ -43,12 +43,16 @@ export function useRfqs(manufacturerId: string | undefined) {
       for (const docSnap of querySnapshot.docs) {
         const data = docSnap.data();
         
-        // Fetch brand name
+        // Fetch brand name (best-effort; don't fail RFQ list if brandProfiles rules block reads)
         let brandName = "Unknown Brand";
         if (data.brandId) {
-          const brandDoc = await getDoc(doc(db, "brandProfiles", data.brandId));
-          if (brandDoc.exists()) {
-            brandName = brandDoc.data().brandName || "Unknown Brand";
+          try {
+            const brandDoc = await getDoc(doc(db, "brandProfiles", data.brandId));
+            if (brandDoc.exists()) {
+              brandName = brandDoc.data().brandName || "Unknown Brand";
+            }
+          } catch (e) {
+            console.warn("Unable to fetch brand profile for RFQ:", docSnap.id, e);
           }
         }
 
@@ -74,7 +78,10 @@ export function useRfqs(manufacturerId: string | undefined) {
       console.error("Error fetching RFQs:", error);
       toast({
         title: "Error",
-        description: "Failed to load RFQs",
+        description:
+          error?.code === "permission-denied"
+            ? "RFQs are blocked by Firestore permissions. Please verify Firestore rules for the 'rfqs' collection."
+            : "Failed to load RFQs",
         variant: "destructive",
       });
     } finally {

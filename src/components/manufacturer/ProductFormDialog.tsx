@@ -101,11 +101,13 @@ export function ProductFormDialog({
   };
 
   const handleImageUpload = async (file: File): Promise<string | null> => {
-    return upload(file, { bucket: "product-images", folder: "products" });
+    // Keep paths flat (product-images/{uid}/{file}) to be compatible with common Storage rules
+    return upload(file, { bucket: "product-images" });
   };
 
   const handleDocumentUpload = async (file: File): Promise<string | null> => {
-    return upload(file, { bucket: "documents", folder: "products" });
+    // Keep paths flat (documents/{uid}/{file}) to be compatible with common Storage rules
+    return upload(file, { bucket: "documents" });
   };
 
   const removeImage = (url: string) => {

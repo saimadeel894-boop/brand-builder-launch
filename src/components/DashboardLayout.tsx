@@ -1,4 +1,4 @@
-import { ReactNode, useState, forwardRef } from "react";
+import { ReactNode, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useFirebaseAuth } from "@/contexts/FirebaseAuthContext";
 import { Button } from "@/components/ui/button";
@@ -28,8 +28,7 @@ interface DashboardLayoutProps {
   children: ReactNode;
 }
 
-export const DashboardLayout = forwardRef<HTMLDivElement, DashboardLayoutProps>(
-  function DashboardLayout({ children }, ref) {
+export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { profile, signOut } = useFirebaseAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -106,7 +105,7 @@ export const DashboardLayout = forwardRef<HTMLDivElement, DashboardLayoutProps>(
   const RoleIcon = getRoleIcon();
 
   return (
-    <div ref={ref} className="min-h-screen bg-secondary/30">
+    <div className="min-h-screen bg-secondary/30">
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div
@@ -252,6 +251,4 @@ export const DashboardLayout = forwardRef<HTMLDivElement, DashboardLayoutProps>(
       )}
     </div>
   );
-});
-
-DashboardLayout.displayName = "DashboardLayout";
+}

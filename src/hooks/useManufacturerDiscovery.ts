@@ -77,7 +77,10 @@ export function useManufacturerDiscovery() {
       console.error("Error fetching manufacturers:", error);
       toast({
         title: "Error",
-        description: "Failed to load manufacturers",
+        description:
+          error?.code === "permission-denied"
+            ? "Manufacturers are blocked by Firestore permissions. Please verify Firestore rules for the 'manufacturerProfiles' collection."
+            : "Failed to load manufacturers",
         variant: "destructive",
       });
     } finally {

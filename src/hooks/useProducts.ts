@@ -94,7 +94,10 @@ export function useProducts(manufacturerId: string | undefined) {
       console.error("Error fetching products:", error);
       toast({
         title: "Error",
-        description: "Failed to load products",
+        description:
+          error?.code === "permission-denied"
+            ? "Products are blocked by Firestore permissions. Please verify Firestore rules for the 'products' collection."
+            : "Failed to load products",
         variant: "destructive",
       });
     } finally {

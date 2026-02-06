@@ -16,6 +16,10 @@ const ALLOWED_DOCUMENT_TYPES = [
   "application/msword",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ];
+const ALLOWED_RFQ_ATTACHMENT_TYPES = [
+  ...ALLOWED_IMAGE_TYPES,
+  ...ALLOWED_DOCUMENT_TYPES,
+];
 
 export function useFileUpload() {
   const { user } = useFirebaseAuth();
@@ -38,6 +42,10 @@ export function useFileUpload() {
     } else if (bucket === "documents") {
       if (!ALLOWED_DOCUMENT_TYPES.includes(file.type)) {
         return "Only PDF and Word documents are allowed";
+      }
+    } else if (bucket === "rfq-attachments") {
+      if (!ALLOWED_RFQ_ATTACHMENT_TYPES.includes(file.type)) {
+        return "Only PDF, Word docs, and common image formats are allowed";
       }
     }
 

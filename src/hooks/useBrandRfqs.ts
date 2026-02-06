@@ -44,12 +44,16 @@ export function useBrandRfqs(brandId: string | undefined) {
       for (const docSnap of querySnapshot.docs) {
         const data = docSnap.data();
         
-        // Fetch manufacturer name
+        // Fetch manufacturer name (best-effort; don't fail list if manufacturerProfiles rules block reads)
         let manufacturerName = "Unknown Manufacturer";
         if (data.manufacturerId) {
-          const mfgDoc = await getDoc(doc(db, "manufacturerProfiles", data.manufacturerId));
-          if (mfgDoc.exists()) {
-            manufacturerName = mfgDoc.data().companyName || "Unknown Manufacturer";
+          try {
+            const mfgDoc = await getDoc(doc(db, "manufacturerProfiles", data.manufacturerId));
+            if (mfgDoc.exists()) {
+              manufacturerName = mfgDoc.data().companyName || "Unknown Manufacturer";
+            }
+          } catch (e) {
+            console.warn("Unable to fetch manufacturer profile for RFQ:", docSnap.id, e);
           }
         }
 

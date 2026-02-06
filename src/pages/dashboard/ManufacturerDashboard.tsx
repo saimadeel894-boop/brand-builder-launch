@@ -75,7 +75,11 @@ export default function ManufacturerDashboard() {
           {/* Welcome section */}
           <div>
             <h1 className="text-2xl font-bold text-foreground">
-              Welcome back, {profile?.companyName || authProfile?.email?.split("@")[0] || "User"}!
+              Welcome back, {
+                profile?.firstName 
+                  ? profile.firstName 
+                  : profile?.companyName || authProfile?.email?.split("@")[0] || "User"
+              }!
             </h1>
             <p className="mt-1 text-muted-foreground">
               Here's a summary of your products and incoming requests.

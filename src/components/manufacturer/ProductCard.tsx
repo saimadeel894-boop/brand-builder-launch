@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Package, MoreVertical, Edit, Trash2, Image } from "lucide-react";
 import { Product } from "@/hooks/useProducts";
+import { formatMoq, formatLeadTime, formatPrice } from "@/components/ui/unit-input";
 
 interface ProductCardProps {
   product: Product;
@@ -98,22 +99,22 @@ export function ProductCard({ product, onEdit, onDelete }: ProductCardProps) {
 
         <CardContent>
           <div className="grid grid-cols-2 gap-2 text-sm">
-            {product.moq && (
+            {product.moq != null && (
               <div>
                 <span className="text-muted-foreground">MOQ:</span>{" "}
-                <span className="font-medium">{product.moq}</span>
+                <span className="font-medium">{formatMoq(product.moq)}</span>
               </div>
             )}
-            {product.leadTime && (
+            {product.leadTime != null && product.leadTimeUnit && (
               <div>
                 <span className="text-muted-foreground">Lead:</span>{" "}
-                <span className="font-medium">{product.leadTime}</span>
+                <span className="font-medium">{formatLeadTime(product.leadTime, product.leadTimeUnit)}</span>
               </div>
             )}
-            {product.priceRange && (
+            {product.price != null && product.currency && (
               <div className="col-span-2">
                 <span className="text-muted-foreground">Price:</span>{" "}
-                <span className="font-medium">{product.priceRange}</span>
+                <span className="font-medium">{formatPrice(product.price, product.currency)}</span>
               </div>
             )}
           </div>

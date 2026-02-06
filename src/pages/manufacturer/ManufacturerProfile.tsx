@@ -13,8 +13,11 @@ import {
   Clock, 
   Edit, 
   Loader2,
-  CheckCircle
+  CheckCircle,
+  DollarSign,
+  User
 } from "lucide-react";
+import { formatMoq, formatLeadTime, formatPrice } from "@/components/ui/unit-input";
 
 export default function ManufacturerProfile() {
   const { profile, loading, updateProfile } = useManufacturerProfile();
@@ -80,6 +83,12 @@ export default function ManufacturerProfile() {
               </div>
               <div>
                 <CardTitle className="text-xl">{profile.companyName}</CardTitle>
+                {(profile.firstName || profile.lastName) && (
+                  <p className="text-muted-foreground flex items-center gap-1 mt-1">
+                    <User className="h-4 w-4" />
+                    {[profile.firstName, profile.lastName].filter(Boolean).join(" ")}
+                  </p>
+                )}
                 {profile.location && (
                   <p className="text-muted-foreground flex items-center gap-1 mt-1">
                     <MapPin className="h-4 w-4" />
@@ -113,20 +122,37 @@ export default function ManufacturerProfile() {
               </div>
             )}
 
-            {/* MOQ and Lead Time */}
-            <div className="grid gap-4 sm:grid-cols-2">
+            {/* MOQ, Lead Time, and Price */}
+            <div className="grid gap-4 sm:grid-cols-3">
               <div className="flex items-center gap-3 p-4 bg-secondary rounded-lg">
                 <Package className="h-5 w-5 text-muted-foreground" />
                 <div>
-                  <p className="text-sm text-muted-foreground">Minimum Order Quantity</p>
-                  <p className="font-medium">{profile.moq || "Not specified"}</p>
+                  <p className="text-sm text-muted-foreground">MOQ</p>
+                  <p className="font-medium">
+                    {profile.moq != null ? formatMoq(profile.moq) : "Not specified"}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-3 p-4 bg-secondary rounded-lg">
                 <Clock className="h-5 w-5 text-muted-foreground" />
                 <div>
                   <p className="text-sm text-muted-foreground">Lead Time</p>
-                  <p className="font-medium">{profile.leadTime || "Not specified"}</p>
+                  <p className="font-medium">
+                    {profile.leadTime != null && profile.leadTimeUnit 
+                      ? formatLeadTime(profile.leadTime, profile.leadTimeUnit)
+                      : "Not specified"}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 p-4 bg-secondary rounded-lg">
+                <DollarSign className="h-5 w-5 text-muted-foreground" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Price</p>
+                  <p className="font-medium">
+                    {profile.price != null && profile.currency 
+                      ? formatPrice(profile.price, profile.currency)
+                      : "Not specified"}
+                  </p>
                 </div>
               </div>
             </div>

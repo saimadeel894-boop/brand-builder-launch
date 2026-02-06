@@ -18,6 +18,8 @@ import { Button } from "@/components/ui/button";
 
 interface BrandProfile {
   brandName: string;
+  firstName?: string;
+  lastName?: string;
   industry: string;
 }
 
@@ -36,6 +38,8 @@ export default function BrandDashboard() {
           const data = profileDoc.data();
           setProfile({
             brandName: data.brandName,
+            firstName: data.firstName,
+            lastName: data.lastName,
             industry: data.industry,
           });
         }
@@ -70,7 +74,11 @@ export default function BrandDashboard() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h1 className="text-2xl font-bold text-foreground">
-                Welcome back, {profile?.brandName || authProfile?.email?.split("@")[0] || "User"}!
+                Welcome back, {
+                  profile?.firstName 
+                    ? profile.firstName 
+                    : profile?.brandName || authProfile?.email?.split("@")[0] || "User"
+                }!
               </h1>
               <p className="mt-1 text-muted-foreground">
                 Here's a summary of your manufacturer partnerships.

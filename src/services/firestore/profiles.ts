@@ -5,13 +5,20 @@ import { db } from "@/lib/firebase";
 export interface ManufacturerProfile {
   userId: string;
   companyName: string;
+  firstName?: string;
+  lastName?: string;
   categories: string[];
   certifications: string[];
-  moq?: string;
-  leadTime?: string;
+  moq?: number;
+  moqUnit?: string; // "units" (for display, always units)
+  leadTime?: number;
+  leadTimeUnit?: "days" | "weeks" | "months";
+  price?: number;
+  currency?: "USD" | "EUR" | "JPY" | "CNY" | "KRW";
   description?: string;
   location?: string;
   website?: string;
+  companyId?: string; // For future multi-user company support
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -41,13 +48,20 @@ export async function getManufacturerProfile(userId: string): Promise<Manufactur
       return {
         userId: data.userId,
         companyName: data.companyName,
+        firstName: data.firstName,
+        lastName: data.lastName,
         categories: data.categories || [],
         certifications: data.certifications || [],
         moq: data.moq,
+        moqUnit: data.moqUnit,
         leadTime: data.leadTime,
+        leadTimeUnit: data.leadTimeUnit,
+        price: data.price,
+        currency: data.currency,
         description: data.description,
         location: data.location,
         website: data.website,
+        companyId: data.companyId,
         createdAt: data.createdAt?.toDate(),
         updatedAt: data.updatedAt?.toDate(),
       };
@@ -78,7 +92,10 @@ export async function updateManufacturerProfile(
 export interface BrandProfile {
   userId: string;
   brandName: string;
+  firstName?: string;
+  lastName?: string;
   industry: string;
+  companyId?: string; // For future multi-user company support
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -108,7 +125,10 @@ export async function getBrandProfile(userId: string): Promise<BrandProfile | nu
       return {
         userId: data.userId,
         brandName: data.brandName,
+        firstName: data.firstName,
+        lastName: data.lastName,
         industry: data.industry,
+        companyId: data.companyId,
         createdAt: data.createdAt?.toDate(),
         updatedAt: data.updatedAt?.toDate(),
       };
@@ -118,6 +138,17 @@ export async function getBrandProfile(userId: string): Promise<BrandProfile | nu
     console.error("Error fetching brand profile:", error);
     return null;
   }
+}
+
+// Influencer Profile
+export interface InfluencerProfile {
+  userId: string;
+  name: string;
+  firstName?: string;
+  lastName?: string;
+  primaryPlatform: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 // Influencer Profile
@@ -154,6 +185,8 @@ export async function getInfluencerProfile(userId: string): Promise<InfluencerPr
       return {
         userId: data.userId,
         name: data.name,
+        firstName: data.firstName,
+        lastName: data.lastName,
         primaryPlatform: data.primaryPlatform,
         createdAt: data.createdAt?.toDate(),
         updatedAt: data.updatedAt?.toDate(),

@@ -16,6 +16,8 @@ import { Button } from "@/components/ui/button";
 
 interface InfluencerProfile {
   name: string;
+  firstName?: string;
+  lastName?: string;
   primaryPlatform: string;
 }
 
@@ -51,6 +53,8 @@ export default function InfluencerDashboard() {
           const data = profileDoc.data();
           setProfile({
             name: data.name,
+            firstName: data.firstName,
+            lastName: data.lastName,
             primaryPlatform: data.primaryPlatform,
           });
         }
@@ -89,7 +93,11 @@ export default function InfluencerDashboard() {
           {/* Welcome section */}
           <div>
             <h1 className="text-2xl font-bold text-foreground">
-              Welcome back, {profile?.name || authProfile?.email?.split("@")[0] || "User"}!
+              Welcome back, {
+                profile?.firstName 
+                  ? profile.firstName 
+                  : profile?.name || authProfile?.email?.split("@")[0] || "User"
+              }!
             </h1>
             <p className="mt-1 text-muted-foreground">
               Here's a summary of your collaborations and brand partnerships.

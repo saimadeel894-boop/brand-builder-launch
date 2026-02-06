@@ -16,17 +16,23 @@ import { z } from "zod";
 
 // Validation schemas
 const manufacturerSchema = z.object({
+  firstName: z.string().trim().max(50).optional(),
+  lastName: z.string().trim().max(50).optional(),
   companyName: z.string().trim().min(2, "Company name must be at least 2 characters").max(100),
   categories: z.array(z.string()).min(1, "Please add at least one category"),
   certifications: z.array(z.string()),
 });
 
 const brandSchema = z.object({
+  firstName: z.string().trim().max(50).optional(),
+  lastName: z.string().trim().max(50).optional(),
   brandName: z.string().trim().min(2, "Brand name must be at least 2 characters").max(100),
   industry: z.string().trim().min(2, "Industry must be at least 2 characters").max(100),
 });
 
 const influencerSchema = z.object({
+  firstName: z.string().trim().max(50).optional(),
+  lastName: z.string().trim().max(50).optional(),
   name: z.string().trim().min(2, "Name must be at least 2 characters").max(100),
   primaryPlatform: z.string().trim().min(2, "Platform must be at least 2 characters").max(100),
 });
@@ -36,6 +42,10 @@ export default function CreateProfile() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+
+  // Common fields
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
 
   // Manufacturer fields
   const [companyName, setCompanyName] = useState("");
@@ -80,7 +90,7 @@ export default function CreateProfile() {
     try {
       // Validate and insert based on role
       if (profile.role === "manufacturer") {
-        const result = manufacturerSchema.safeParse({ companyName, categories, certifications });
+        const result = manufacturerSchema.safeParse({ firstName, lastName, companyName, categories, certifications });
         if (!result.success) {
           toast({
             title: "Validation Error",
@@ -93,13 +103,15 @@ export default function CreateProfile() {
 
         const { error } = await createManufacturerProfile(user.uid, {
           companyName,
+          firstName: firstName || undefined,
+          lastName: lastName || undefined,
           categories,
           certifications,
         });
 
         if (error) throw error;
       } else if (profile.role === "brand") {
-        const result = brandSchema.safeParse({ brandName, industry });
+        const result = brandSchema.safeParse({ firstName, lastName, brandName, industry });
         if (!result.success) {
           toast({
             title: "Validation Error",
@@ -112,12 +124,14 @@ export default function CreateProfile() {
 
         const { error } = await createBrandProfile(user.uid, {
           brandName,
+          firstName: firstName || undefined,
+          lastName: lastName || undefined,
           industry,
         });
 
         if (error) throw error;
       } else if (profile.role === "influencer") {
-        const result = influencerSchema.safeParse({ name, primaryPlatform });
+        const result = influencerSchema.safeParse({ firstName, lastName, name, primaryPlatform });
         if (!result.success) {
           toast({
             title: "Validation Error",
@@ -130,6 +144,8 @@ export default function CreateProfile() {
 
         const { error } = await createInfluencerProfile(user.uid, {
           name,
+          firstName: firstName || undefined,
+          lastName: lastName || undefined,
           primaryPlatform,
         });
 
@@ -158,12 +174,37 @@ export default function CreateProfile() {
     }
   };
 
+  const renderNameFields = () => (
+    <div className="grid gap-4 sm:grid-cols-2">
+      <div className="space-y-2">
+        <Label htmlFor="firstName">First Name</Label>
+        <Input
+          id="firstName"
+          value={firstName}
+          onChange={(e) => setFirstName(e.target.value)}
+          placeholder="Your first name"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="lastName">Last Name</Label>
+        <Input
+          id="lastName"
+          value={lastName}
+          onChange={(e) => setLastName(e.target.value)}
+          placeholder="Your last name"
+        />
+      </div>
+    </div>
+  );
+
   const renderForm = () => {
     if (profile?.role === "manufacturer") {
       return (
         <>
+          {renderNameFields()}
+
           <div className="space-y-2">
-            <Label htmlFor="companyName">Company Name</Label>
+            <Label htmlFor="companyName">Company Name *</Label>
             <Input
               id="companyName"
               value={companyName}
@@ -174,7 +215,7 @@ export default function CreateProfile() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="categories">Categories</Label>
+            <Label htmlFor="categories">Categories *</Label>
             <div className="flex gap-2">
               <Input
                 id="categories"
@@ -245,7 +286,7 @@ export default function CreateProfile() {
                 {certifications.map((cert, index) => (
                   <span
                     key={index}
-                    className="inline-flex items-center gap-1 rounded-full bg-success/10 px-3 py-1 text-sm text-success"
+                    className="inline-flex items-center gap-1 rounded-full bg-green-500/10 px-3 py-1 text-sm text-green-600"
                   >
                     {cert}
                     <button
@@ -267,8 +308,10 @@ export default function CreateProfile() {
     if (profile?.role === "brand") {
       return (
         <>
+          {renderNameFields()}
+
           <div className="space-y-2">
-            <Label htmlFor="brandName">Brand Name</Label>
+            <Label htmlFor="brandName">Brand Name *</Label>
             <Input
               id="brandName"
               value={brandName}
@@ -279,7 +322,7 @@ export default function CreateProfile() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="industry">Industry</Label>
+            <Label htmlFor="industry">Industry *</Label>
             <Input
               id="industry"
               value={industry}
@@ -295,8 +338,10 @@ export default function CreateProfile() {
     if (profile?.role === "influencer") {
       return (
         <>
+          {renderNameFields()}
+
           <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
+            <Label htmlFor="name">Display Name *</Label>
             <Input
               id="name"
               value={name}
@@ -307,7 +352,7 @@ export default function CreateProfile() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="primaryPlatform">Primary Platform</Label>
+            <Label htmlFor="primaryPlatform">Primary Platform *</Label>
             <Input
               id="primaryPlatform"
               value={primaryPlatform}

@@ -18,6 +18,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  MoqInput,
+  PriceInput,
+  formatMoq,
+  formatPrice,
+  type Currency,
+} from "@/components/ui/unit-input";
+import {
   ArrowLeft,
   ArrowRight,
   Factory,
@@ -78,8 +85,9 @@ export default function CreateRfq() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
-  const [quantity, setQuantity] = useState("");
-  const [budget, setBudget] = useState("");
+  const [quantity, setQuantity] = useState<number | undefined>(undefined);
+  const [budget, setBudget] = useState<number | undefined>(undefined);
+  const [budgetCurrency, setBudgetCurrency] = useState<Currency>("USD");
   const [deadline, setDeadline] = useState("");
   const [selectedCertifications, setSelectedCertifications] = useState<string[]>([]);
   const [notes, setNotes] = useState("");
@@ -119,7 +127,7 @@ export default function CreateRfq() {
       case 1:
         return !!selectedManufacturer;
       case 2:
-        return !!title && !!category && !!quantity;
+        return !!title && !!category && quantity !== undefined && quantity > 0;
       case 3:
         return true;
       case 4:
@@ -134,15 +142,15 @@ export default function CreateRfq() {
 
     setSubmitting(true);
     try {
-      // Create RFQ
+      // Create RFQ with formatted values
       const rfqId = await createRfq({
         brandId: user.uid,
         manufacturerId: selectedManufacturer,
         title,
         description,
         category,
-        quantity,
-        budget,
+        quantity: quantity !== undefined ? formatMoq(quantity) : undefined,
+        budget: budget !== undefined ? formatPrice(budget, budgetCurrency) : undefined,
         deadline,
         certifications: selectedCertifications,
         notes,
@@ -365,36 +373,28 @@ export default function CreateRfq() {
                   </Select>
                 </div>
 
-                <div>
-                  <Label htmlFor="quantity">Quantity *</Label>
-                  <Input
-                    id="quantity"
-                    placeholder="e.g., 5,000 units"
-                    value={quantity}
-                    onChange={(e) => setQuantity(e.target.value)}
-                    className="mt-1"
-                  />
-                </div>
+                <MoqInput
+                  value={quantity}
+                  onChange={setQuantity}
+                  label="Quantity *"
+                  required
+                />
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="budget">Target Budget</Label>
-                    <Input
-                      id="budget"
-                      placeholder="e.g., $50,000"
-                      value={budget}
-                      onChange={(e) => setBudget(e.target.value)}
-                      className="mt-1"
-                    />
-                  </div>
-                  <div>
+                  <PriceInput
+                    value={budget}
+                    currency={budgetCurrency}
+                    onValueChange={setBudget}
+                    onCurrencyChange={setBudgetCurrency}
+                    label="Target Budget"
+                  />
+                  <div className="space-y-2">
                     <Label htmlFor="deadline">Deadline</Label>
                     <Input
                       id="deadline"
                       type="date"
                       value={deadline}
                       onChange={(e) => setDeadline(e.target.value)}
-                      className="mt-1"
                     />
                   </div>
                 </div>
@@ -547,12 +547,12 @@ export default function CreateRfq() {
                   </div>
                   <div className="flex justify-between py-2 border-b">
                     <span className="text-muted-foreground">Quantity</span>
-                    <span className="font-medium">{quantity}</span>
+                    <span className="font-medium">{formatMoq(quantity)}</span>
                   </div>
-                  {budget && (
+                  {budget !== undefined && (
                     <div className="flex justify-between py-2 border-b">
                       <span className="text-muted-foreground">Budget</span>
-                      <span className="font-medium">{budget}</span>
+                      <span className="font-medium">{formatPrice(budget, budgetCurrency)}</span>
                     </div>
                   )}
                   {deadline && (

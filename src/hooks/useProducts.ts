@@ -59,19 +59,20 @@ export function useProducts(manufacturerId: string | undefined) {
     }
 
     try {
+      // Query without orderBy to avoid requiring a composite index
+      // We'll sort client-side instead
       const q = query(
         collection(db, "products"),
-        where("manufacturerId", "==", manufacturerId),
-        orderBy("createdAt", "desc")
+        where("manufacturerId", "==", manufacturerId)
       );
 
       const querySnapshot = await getDocs(q);
       const productsData: Product[] = [];
       
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
+      querySnapshot.forEach((docSnap) => {
+        const data = docSnap.data();
         productsData.push({
-          id: doc.id,
+          id: docSnap.id,
           manufacturerId: data.manufacturerId,
           name: data.name,
           category: data.category,
@@ -87,6 +88,13 @@ export function useProducts(manufacturerId: string | undefined) {
           createdAt: data.createdAt?.toDate(),
           updatedAt: data.updatedAt?.toDate(),
         });
+      });
+
+      // Sort by createdAt descending (client-side to avoid index requirement)
+      productsData.sort((a, b) => {
+        const dateA = a.createdAt?.getTime() || 0;
+        const dateB = b.createdAt?.getTime() || 0;
+        return dateB - dateA;
       });
 
       setProducts(productsData);

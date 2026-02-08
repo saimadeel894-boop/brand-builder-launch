@@ -32,10 +32,11 @@ export function useBrandRfqs(brandId: string | undefined) {
     }
 
     try {
+      // Query without orderBy to avoid requiring a composite index
+      // We'll sort client-side instead
       const q = query(
         collection(db, "rfqs"),
-        where("brandId", "==", brandId),
-        orderBy("createdAt", "desc")
+        where("brandId", "==", brandId)
       );
 
       const querySnapshot = await getDocs(q);
@@ -74,6 +75,13 @@ export function useBrandRfqs(brandId: string | undefined) {
           manufacturerName,
         });
       }
+
+      // Sort by createdAt descending (client-side to avoid index requirement)
+      rfqsData.sort((a, b) => {
+        const dateA = a.createdAt?.getTime() || 0;
+        const dateB = b.createdAt?.getTime() || 0;
+        return dateB - dateA;
+      });
 
       setRfqs(rfqsData);
     } catch (error: any) {

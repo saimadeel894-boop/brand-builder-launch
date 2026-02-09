@@ -151,15 +151,6 @@ export interface InfluencerProfile {
   updatedAt?: Date;
 }
 
-// Influencer Profile
-export interface InfluencerProfile {
-  userId: string;
-  name: string;
-  primaryPlatform: string;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
-
 export async function createInfluencerProfile(
   userId: string,
   data: Omit<InfluencerProfile, "userId" | "createdAt" | "updatedAt">

@@ -138,7 +138,15 @@ export default function CreateRfq() {
   };
 
   const handleSubmit = async (asDraft: boolean) => {
-    if (!user) return;
+    if (!user) {
+      console.error("handleSubmit called but user is null");
+      toast({
+        title: "Authentication Error",
+        description: "You must be logged in to create an RFQ. Please refresh and try again.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setSubmitting(true);
     try {

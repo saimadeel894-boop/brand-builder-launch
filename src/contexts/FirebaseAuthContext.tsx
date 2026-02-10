@@ -38,35 +38,40 @@ export function FirebaseAuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (userId: string): Promise<UserProfile | null> => {
-    try {
-      console.log("Fetching profile for user:", userId);
-      
-      // Add a timeout to prevent hanging
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error("Profile fetch timeout")), 10000);
-      });
-      
-      const fetchPromise = getDoc(doc(db, "users", userId));
-      const userDoc = await Promise.race([fetchPromise, timeoutPromise]);
-      
-      console.log("User doc exists:", userDoc.exists());
-      if (userDoc.exists()) {
-        const data = userDoc.data();
-        return {
-          id: userId,
-          email: data.email,
-          role: data.role || null,
-          profileCompleted: data.profileCompleted || false,
-          createdAt: data.createdAt?.toDate(),
-        };
+  const fetchProfile = async (userId: string, retries = 2): Promise<UserProfile | null> => {
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      try {
+        console.log(`Fetching profile for user: ${userId} (attempt ${attempt + 1})`);
+        
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error("Profile fetch timeout")), 10000);
+        });
+        
+        const fetchPromise = getDoc(doc(db, "users", userId));
+        const userDoc = await Promise.race([fetchPromise, timeoutPromise]);
+        
+        console.log("User doc exists:", userDoc.exists());
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          return {
+            id: userId,
+            email: data.email,
+            role: data.role || null,
+            profileCompleted: data.profileCompleted || false,
+            createdAt: data.createdAt?.toDate(),
+          };
+        }
+        console.log("No user document found");
+        return null;
+      } catch (error) {
+        console.error(`Error fetching profile (attempt ${attempt + 1}):`, error);
+        if (attempt < retries) {
+          // Wait before retrying
+          await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+        }
       }
-      console.log("No user document found, returning null");
-      return null;
-    } catch (error) {
-      console.error("Error fetching profile:", error);
-      return null;
     }
+    return null;
   };
 
   const refreshProfile = async (): Promise<UserProfile | null> => {

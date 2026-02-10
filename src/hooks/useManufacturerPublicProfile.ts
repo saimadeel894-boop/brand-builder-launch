@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { doc, getDoc, collection, getDocs, query, where, orderBy } from "firebase/firestore";
+import { doc, getDoc, collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 
@@ -58,11 +58,10 @@ export function useManufacturerPublicProfile(manufacturerId: string | undefined)
           website: data.website || null,
         });
 
-        // Fetch manufacturer's products
+        // Fetch manufacturer's products (no orderBy to avoid index requirement)
         const productsQuery = query(
           collection(db, "products"),
-          where("manufacturerId", "==", manufacturerId),
-          orderBy("createdAt", "desc")
+          where("manufacturerId", "==", manufacturerId)
         );
 
         const productsSnapshot = await getDocs(productsQuery);
@@ -80,6 +79,8 @@ export function useManufacturerPublicProfile(manufacturerId: string | undefined)
           };
         });
 
+        // Sort client-side by newest first
+        productsData.sort((a, b) => (b as any).createdAt - (a as any).createdAt);
         setProducts(productsData);
       } else {
         toast({

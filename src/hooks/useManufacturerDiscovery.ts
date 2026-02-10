@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { collection, getDocs, query, orderBy } from "firebase/firestore";
+import { collection, getDocs, query } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 
@@ -45,10 +45,7 @@ export function useManufacturerDiscovery() {
 
   const fetchManufacturers = useCallback(async () => {
     try {
-      const q = query(
-        collection(db, "manufacturerProfiles"),
-        orderBy("companyName", "asc")
-      );
+      const q = query(collection(db, "manufacturerProfiles"));
 
       const querySnapshot = await getDocs(q);
       const mfgData: ManufacturerProfile[] = [];
@@ -58,7 +55,7 @@ export function useManufacturerDiscovery() {
         mfgData.push({
           id: docSnap.id,
           userId: data.userId || docSnap.id,
-          companyName: data.companyName,
+          companyName: data.companyName || "Unknown",
           categories: data.categories || [],
           certifications: data.certifications || [],
           moq: data.moq || null,
@@ -70,6 +67,9 @@ export function useManufacturerDiscovery() {
           updatedAt: data.updatedAt?.toDate(),
         });
       });
+
+      // Sort client-side to avoid requiring Firestore composite indexes
+      mfgData.sort((a, b) => a.companyName.localeCompare(b.companyName));
 
       setManufacturers(mfgData);
       setFilteredManufacturers(mfgData);

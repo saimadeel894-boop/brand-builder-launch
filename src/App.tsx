@@ -40,6 +40,11 @@ import CampaignTracking from "./pages/platform/CampaignTracking";
 import MarketIntelligence from "./pages/platform/MarketIntelligence";
 import IngredientDatabase from "./pages/platform/IngredientDatabase";
 import Analytics from "./pages/platform/Analytics";
+import RegulatoryCompliance from "./pages/platform/RegulatoryCompliance";
+import RfqManagement from "./pages/platform/RfqManagement";
+import SampleManagement from "./pages/platform/SampleManagement";
+import InfluencerDiscovery from "./pages/platform/InfluencerDiscovery";
+import UserProfileManagement from "./pages/platform/UserProfileManagement";
 
 const queryClient = new QueryClient();
 
@@ -88,6 +93,11 @@ const App = () => (
             <Route path="/ingredients" element={<ProtectedRoute requireRole requireProfile><IngredientDatabase /></ProtectedRoute>} />
             <Route path="/campaign-tracking" element={<ProtectedRoute requireRole requireProfile><CampaignTracking /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute requireRole requireProfile><PlatformSettings /></ProtectedRoute>} />
+            <Route path="/compliance" element={<ProtectedRoute requireRole requireProfile><RegulatoryCompliance /></ProtectedRoute>} />
+            <Route path="/rfq-management" element={<ProtectedRoute requireRole requireProfile><RfqManagement /></ProtectedRoute>} />
+            <Route path="/sample-management" element={<ProtectedRoute requireRole requireProfile><SampleManagement /></ProtectedRoute>} />
+            <Route path="/influencer-discovery" element={<ProtectedRoute requireRole requireProfile><InfluencerDiscovery /></ProtectedRoute>} />
+            <Route path="/profile-management" element={<ProtectedRoute requireRole requireProfile><UserProfileManagement /></ProtectedRoute>} />
 
             {/* Catch-all */}
             <Route path="*" element={<NotFound />} />

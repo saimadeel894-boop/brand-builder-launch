@@ -26,6 +26,10 @@ import ManufacturerProfileView from "./pages/brand/ManufacturerProfileView";
 import BrandRfqs from "./pages/brand/BrandRfqs";
 import CreateRfq from "./pages/brand/CreateRfq";
 
+// Influencer Pages
+import InfluencerMarketplace from "./pages/influencer/InfluencerMarketplace";
+import InfluencerApplications from "./pages/influencer/InfluencerApplications";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -125,6 +129,24 @@ const App = () => (
               element={
                 <ProtectedRoute requireRole requireProfile>
                   <CreateRfq />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Influencer routes */}
+            <Route
+              path="/influencer/marketplace"
+              element={
+                <ProtectedRoute requireRole requireProfile>
+                  <InfluencerMarketplace />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/influencer/applications"
+              element={
+                <ProtectedRoute requireRole requireProfile>
+                  <InfluencerApplications />
                 </ProtectedRoute>
               }
             />

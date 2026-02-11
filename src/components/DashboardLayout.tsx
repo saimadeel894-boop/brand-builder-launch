@@ -91,9 +91,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       case "influencer":
         return [
           ...baseNav,
-          { name: "Collaborations", href: "/collaborations", icon: Diamond, disabled: true },
+          { name: "Marketplace", href: "/influencer/marketplace", icon: Diamond },
+          { name: "My Applications", href: "/influencer/applications", icon: FileText },
           { name: "Messages", href: "/messages", icon: MessageSquare, disabled: true },
-          { name: "Brands", href: "/brands", icon: Building2, disabled: true },
           { name: "Analytics", href: "/analytics", icon: TrendingUp, disabled: true },
         ];
       default:

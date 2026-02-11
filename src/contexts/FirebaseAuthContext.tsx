@@ -84,25 +84,63 @@ export function FirebaseAuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    let isMounted = true;
+    let isInitialLoad = true;
+
+    // 1. Handle INITIAL load: wait for auth to fully restore, then fetch profile
+    const initializeAuth = async () => {
+      try {
+        // authStateReady() resolves once Firebase restores session from persistence
+        await auth.authStateReady();
+        if (!isMounted) return;
+
+        const currentUser = auth.currentUser;
+        setUser(currentUser);
+
+        if (currentUser) {
+          // Force token refresh to ensure valid Firestore credentials
+          await currentUser.getIdToken(true);
+          if (!isMounted) return;
+
+          const profileData = await fetchProfile(currentUser.uid);
+          if (isMounted) setProfile(profileData);
+        }
+      } catch (error) {
+        console.error("Error initializing auth:", error);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+          isInitialLoad = false;
+        }
+      }
+    };
+
+    initializeAuth();
+
+    // 2. Listen for SUBSEQUENT auth changes (sign-in, sign-out after initial load)
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (isInitialLoad) return; // Skip — handled by initializeAuth above
+      if (!isMounted) return;
+
       setUser(firebaseUser);
 
       if (firebaseUser) {
         try {
           const profileData = await fetchProfile(firebaseUser.uid);
-          setProfile(profileData);
+          if (isMounted) setProfile(profileData);
         } catch (error) {
           console.error("Error in auth state change:", error);
-          setProfile(null);
+          if (isMounted) setProfile(null);
         }
       } else {
         setProfile(null);
       }
-
-      setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
   }, []);
 
   const signUp = async (email: string, password: string): Promise<{ error: Error | null; profile?: UserProfile | null }> => {

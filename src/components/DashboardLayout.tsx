@@ -28,6 +28,11 @@ import {
   BarChart3,
   Target,
   User,
+  Shield,
+  ClipboardList,
+  Truck,
+  UserSearch,
+  UserCog,
 } from "lucide-react";
 
 interface DashboardLayoutProps {
@@ -75,6 +80,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       { name: "Market Intel", href: "/market-intelligence", icon: Globe },
       { name: "Ingredients", href: "/ingredients", icon: Beaker },
       { name: "Campaigns", href: "/campaign-tracking", icon: Target },
+      { name: "divider", href: "#", icon: LayoutDashboard },
+      { name: "Compliance", href: "/compliance", icon: Shield },
+      { name: "RFQ Manager", href: "/rfq-management", icon: ClipboardList },
+      { name: "Samples", href: "/sample-management", icon: Truck },
+      { name: "Creator Discovery", href: "/influencer-discovery", icon: UserSearch },
+      { name: "Profile Mgmt", href: "/profile-management", icon: UserCog },
     ];
 
     switch (profile?.role) {

@@ -22,6 +22,12 @@ import {
   Plus,
   Package,
   FileText,
+  Sparkles,
+  Beaker,
+  Globe,
+  BarChart3,
+  Target,
+  User,
 } from "lucide-react";
 
 interface DashboardLayoutProps {
@@ -41,27 +47,19 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const getRoleIcon = () => {
     switch (profile?.role) {
-      case "manufacturer":
-        return Factory;
-      case "brand":
-        return Building2;
-      case "influencer":
-        return Users;
-      default:
-        return LayoutDashboard;
+      case "manufacturer": return Factory;
+      case "brand": return Building2;
+      case "influencer": return Users;
+      default: return LayoutDashboard;
     }
   };
 
   const getRoleLabel = () => {
     switch (profile?.role) {
-      case "manufacturer":
-        return "Manufacturer";
-      case "brand":
-        return "Brand";
-      case "influencer":
-        return "Influencer";
-      default:
-        return "User";
+      case "manufacturer": return "Manufacturer";
+      case "brand": return "Brand";
+      case "influencer": return "Influencer";
+      default: return "User";
     }
   };
 
@@ -70,31 +68,42 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     ];
 
+    const platformNav = [
+      { name: "Messages", href: "/messages", icon: MessageSquare },
+      { name: "Analytics", href: "/analytics", icon: BarChart3 },
+      { name: "AI Matching", href: "/ai-matching", icon: Sparkles },
+      { name: "Market Intel", href: "/market-intelligence", icon: Globe },
+      { name: "Ingredients", href: "/ingredients", icon: Beaker },
+      { name: "Campaigns", href: "/campaign-tracking", icon: Target },
+    ];
+
     switch (profile?.role) {
       case "manufacturer":
         return [
           ...baseNav,
-          { name: "Products", href: "/manufacturer/products", icon: Package },
           { name: "My Profile", href: "/manufacturer/profile", icon: Factory },
+          { name: "Products", href: "/manufacturer/products", icon: Package },
           { name: "RFQs", href: "/manufacturer/rfqs", icon: FileText },
-          { name: "Messages", href: "/messages", icon: MessageSquare, disabled: true },
-          { name: "Analytics", href: "/analytics", icon: TrendingUp, disabled: true },
+          { name: "divider", href: "#", icon: LayoutDashboard },
+          ...platformNav,
         ];
       case "brand":
         return [
           ...baseNav,
+          { name: "Brand Profile", href: "/brand/profile", icon: Building2 },
           { name: "Find Manufacturers", href: "/brand/manufacturers", icon: Factory },
           { name: "My RFQs", href: "/brand/rfqs", icon: FileText },
-          { name: "Messages", href: "/messages", icon: MessageSquare, disabled: true },
-          { name: "Analytics", href: "/analytics", icon: TrendingUp, disabled: true },
+          { name: "divider", href: "#", icon: LayoutDashboard },
+          ...platformNav,
         ];
       case "influencer":
         return [
           ...baseNav,
+          { name: "My Profile", href: "/influencer/profile", icon: User },
           { name: "Marketplace", href: "/influencer/marketplace", icon: Diamond },
           { name: "My Applications", href: "/influencer/applications", icon: FileText },
-          { name: "Messages", href: "/messages", icon: MessageSquare, disabled: true },
-          { name: "Analytics", href: "/analytics", icon: TrendingUp, disabled: true },
+          { name: "divider", href: "#", icon: LayoutDashboard },
+          ...platformNav,
         ];
       default:
         return baseNav;
@@ -106,72 +115,62 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <div className="min-h-screen bg-secondary/30">
-      {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-foreground/20 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
+        <div className="fixed inset-0 z-40 bg-foreground/20 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
-      {/* Sidebar */}
-      <aside
-        className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 transform bg-sidebar border-r border-sidebar-border transition-transform duration-200 lg:translate-x-0",
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        )}
-      >
+      <aside className={cn(
+        "fixed inset-y-0 left-0 z-50 w-64 transform bg-sidebar border-r border-sidebar-border transition-transform duration-200 lg:translate-x-0",
+        sidebarOpen ? "translate-x-0" : "-translate-x-full"
+      )}>
         <div className="flex h-full flex-col">
-          {/* Logo */}
           <div className="flex h-16 items-center border-b border-sidebar-border px-6">
-            <Link to="/dashboard">
-              <Logo size="sm" />
-            </Link>
+            <Link to="/dashboard"><Logo size="sm" /></Link>
           </div>
 
-          {/* Navigation */}
-          <nav className="flex-1 space-y-1 px-3 py-4">
-            {navigation.map((item) => {
+          <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
+            {navigation.map((item, index) => {
+              if (item.name === "divider") {
+                return <div key={`divider-${index}`} className="my-3 border-t border-sidebar-border mx-2" />;
+              }
+
               const Icon = item.icon;
               const isActive = location.pathname === item.href || location.pathname.startsWith(item.href + "/");
-              const isDisabled = (item as any).disabled === true;
 
               return (
                 <Link
                   key={item.name}
-                  to={isDisabled ? "#" : item.href}
+                  to={item.href}
                   className={cn(
                     "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                     isActive
                       ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                      : isDisabled
-                      ? "text-sidebar-foreground/50 cursor-not-allowed"
                       : "text-sidebar-foreground hover:bg-sidebar-accent/50"
                   )}
-                  onClick={(e) => {
-                    if (isDisabled) e.preventDefault();
-                    setSidebarOpen(false);
-                  }}
+                  onClick={() => setSidebarOpen(false)}
                 >
-                  <Icon className="h-5 w-5" />
+                  <Icon className="h-4 w-4" />
                   {item.name}
                 </Link>
               );
             })}
           </nav>
 
-          {/* Settings */}
-          <div className="border-t border-sidebar-border px-3 py-4">
+          <div className="border-t border-sidebar-border px-3 py-3">
             <Link
-              to="#"
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground/50 cursor-not-allowed"
+              to="/settings"
+              className={cn(
+                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                location.pathname === "/settings"
+                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                  : "text-sidebar-foreground hover:bg-sidebar-accent/50"
+              )}
             >
-              <Settings className="h-5 w-5" />
+              <Settings className="h-4 w-4" />
               Settings
             </Link>
           </div>
 
-          {/* User section */}
           <div className="border-t border-sidebar-border p-4">
             <div className="flex items-center gap-3 mb-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sidebar-accent">
@@ -181,7 +180,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 <p className="truncate text-sm font-medium text-sidebar-foreground">
                   {profile?.email?.split("@")[0] || "User"}
                 </p>
-                <p className="text-xs text-muted-foreground truncate">{profile?.email}</p>
+                <p className="text-xs text-muted-foreground truncate">{getRoleLabel()}</p>
               </div>
             </div>
             <Button
@@ -189,25 +188,19 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent/50"
               onClick={handleSignOut}
             >
-              <LogOut className="mr-3 h-5 w-5" />
+              <LogOut className="mr-3 h-4 w-4" />
               Sign out
             </Button>
           </div>
         </div>
       </aside>
 
-      {/* Main content */}
       <div className="lg:pl-64">
-        {/* Top bar */}
         <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border bg-background px-4 sm:px-6">
-          <button
-            className="text-foreground lg:hidden"
-            onClick={() => setSidebarOpen(true)}
-          >
+          <button className="text-foreground lg:hidden" onClick={() => setSidebarOpen(true)}>
             <Menu className="h-6 w-6" />
           </button>
 
-          {/* Search */}
           <div className="flex-1">
             <div className="relative max-w-md">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -219,33 +212,28 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             </div>
           </div>
 
-          {/* Actions */}
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" className="relative">
               <HelpCircle className="h-5 w-5" />
             </Button>
             <Button variant="ghost" size="icon" className="relative">
               <Bell className="h-5 w-5" />
+              <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive" />
             </Button>
             <Button className="hidden sm:flex gap-2">
               <Plus className="h-4 w-4" />
-              Start New Collaboration
+              New Collaboration
             </Button>
           </div>
         </header>
 
-        {/* Page content */}
         <main className="p-4 sm:p-6 lg:p-8">
           <div className="mx-auto max-w-7xl page-transition">{children}</div>
         </main>
       </div>
 
-      {/* Mobile close button */}
       {sidebarOpen && (
-        <button
-          className="fixed right-4 top-4 z-50 rounded-full bg-background p-2 shadow-lg lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        >
+        <button className="fixed right-4 top-4 z-50 rounded-full bg-background p-2 shadow-lg lg:hidden" onClick={() => setSidebarOpen(false)}>
           <X className="h-5 w-5" />
         </button>
       )}

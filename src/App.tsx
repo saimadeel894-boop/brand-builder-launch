@@ -25,10 +25,21 @@ import ManufacturerDiscovery from "./pages/brand/ManufacturerDiscovery";
 import ManufacturerProfileView from "./pages/brand/ManufacturerProfileView";
 import BrandRfqs from "./pages/brand/BrandRfqs";
 import CreateRfq from "./pages/brand/CreateRfq";
+import BrandProfile from "./pages/brand/BrandProfile";
 
 // Influencer Pages
 import InfluencerMarketplace from "./pages/influencer/InfluencerMarketplace";
 import InfluencerApplications from "./pages/influencer/InfluencerApplications";
+import InfluencerProfile from "./pages/influencer/InfluencerProfile";
+
+// Platform Pages
+import AIMatching from "./pages/platform/AIMatching";
+import Messaging from "./pages/platform/Messaging";
+import PlatformSettings from "./pages/platform/Settings";
+import CampaignTracking from "./pages/platform/CampaignTracking";
+import MarketIntelligence from "./pages/platform/MarketIntelligence";
+import IngredientDatabase from "./pages/platform/IngredientDatabase";
+import Analytics from "./pages/platform/Analytics";
 
 const queryClient = new QueryClient();
 
@@ -46,110 +57,37 @@ const App = () => (
             <Route path="/signup" element={<Signup />} />
 
             {/* Protected onboarding routes */}
-            <Route
-              path="/select-role"
-              element={
-                <ProtectedRoute>
-                  <SelectRole />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/create-profile"
-              element={
-                <ProtectedRoute requireRole>
-                  <CreateProfile />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/select-role" element={<ProtectedRoute><SelectRole /></ProtectedRoute>} />
+            <Route path="/create-profile" element={<ProtectedRoute requireRole><CreateProfile /></ProtectedRoute>} />
 
             {/* Protected dashboard */}
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute requireRole requireProfile>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/dashboard" element={<ProtectedRoute requireRole requireProfile><Dashboard /></ProtectedRoute>} />
 
             {/* Manufacturer routes */}
-            <Route
-              path="/manufacturer/profile"
-              element={
-                <ProtectedRoute requireRole requireProfile>
-                  <ManufacturerProfile />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/manufacturer/products"
-              element={
-                <ProtectedRoute requireRole requireProfile>
-                  <ManufacturerProducts />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/manufacturer/rfqs"
-              element={
-                <ProtectedRoute requireRole requireProfile>
-                  <ManufacturerRfqs />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/manufacturer/profile" element={<ProtectedRoute requireRole requireProfile><ManufacturerProfile /></ProtectedRoute>} />
+            <Route path="/manufacturer/products" element={<ProtectedRoute requireRole requireProfile><ManufacturerProducts /></ProtectedRoute>} />
+            <Route path="/manufacturer/rfqs" element={<ProtectedRoute requireRole requireProfile><ManufacturerRfqs /></ProtectedRoute>} />
 
             {/* Brand routes */}
-            <Route
-              path="/brand/manufacturers"
-              element={
-                <ProtectedRoute requireRole requireProfile>
-                  <ManufacturerDiscovery />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/brand/manufacturers/:manufacturerId"
-              element={
-                <ProtectedRoute requireRole requireProfile>
-                  <ManufacturerProfileView />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/brand/rfqs"
-              element={
-                <ProtectedRoute requireRole requireProfile>
-                  <BrandRfqs />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/brand/rfqs/create"
-              element={
-                <ProtectedRoute requireRole requireProfile>
-                  <CreateRfq />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/brand/profile" element={<ProtectedRoute requireRole requireProfile><BrandProfile /></ProtectedRoute>} />
+            <Route path="/brand/manufacturers" element={<ProtectedRoute requireRole requireProfile><ManufacturerDiscovery /></ProtectedRoute>} />
+            <Route path="/brand/manufacturers/:manufacturerId" element={<ProtectedRoute requireRole requireProfile><ManufacturerProfileView /></ProtectedRoute>} />
+            <Route path="/brand/rfqs" element={<ProtectedRoute requireRole requireProfile><BrandRfqs /></ProtectedRoute>} />
+            <Route path="/brand/rfqs/create" element={<ProtectedRoute requireRole requireProfile><CreateRfq /></ProtectedRoute>} />
 
             {/* Influencer routes */}
-            <Route
-              path="/influencer/marketplace"
-              element={
-                <ProtectedRoute requireRole requireProfile>
-                  <InfluencerMarketplace />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/influencer/applications"
-              element={
-                <ProtectedRoute requireRole requireProfile>
-                  <InfluencerApplications />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/influencer/profile" element={<ProtectedRoute requireRole requireProfile><InfluencerProfile /></ProtectedRoute>} />
+            <Route path="/influencer/marketplace" element={<ProtectedRoute requireRole requireProfile><InfluencerMarketplace /></ProtectedRoute>} />
+            <Route path="/influencer/applications" element={<ProtectedRoute requireRole requireProfile><InfluencerApplications /></ProtectedRoute>} />
+
+            {/* Platform-wide routes */}
+            <Route path="/messages" element={<ProtectedRoute requireRole requireProfile><Messaging /></ProtectedRoute>} />
+            <Route path="/analytics" element={<ProtectedRoute requireRole requireProfile><Analytics /></ProtectedRoute>} />
+            <Route path="/ai-matching" element={<ProtectedRoute requireRole requireProfile><AIMatching /></ProtectedRoute>} />
+            <Route path="/market-intelligence" element={<ProtectedRoute requireRole requireProfile><MarketIntelligence /></ProtectedRoute>} />
+            <Route path="/ingredients" element={<ProtectedRoute requireRole requireProfile><IngredientDatabase /></ProtectedRoute>} />
+            <Route path="/campaign-tracking" element={<ProtectedRoute requireRole requireProfile><CampaignTracking /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute requireRole requireProfile><PlatformSettings /></ProtectedRoute>} />
 
             {/* Catch-all */}
             <Route path="*" element={<NotFound />} />

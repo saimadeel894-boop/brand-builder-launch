@@ -33,6 +33,11 @@ import {
   Truck,
   UserSearch,
   UserCog,
+  Receipt,
+  Wallet,
+  Lock,
+  ScrollText,
+  Gavel,
 } from "lucide-react";
 
 interface DashboardLayoutProps {
@@ -86,6 +91,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       { name: "Samples", href: "/sample-management", icon: Truck },
       { name: "Creator Discovery", href: "/influencer-discovery", icon: UserSearch },
       { name: "Profile Mgmt", href: "/profile-management", icon: UserCog },
+      { name: "divider", href: "#", icon: LayoutDashboard },
+      { name: "Invoicing", href: "/invoicing", icon: Receipt },
+      { name: "Payments & Wallets", href: "/payments-wallets", icon: Wallet },
+      { name: "Escrow", href: "/escrow", icon: Lock },
+      { name: "Contracts", href: "/contracts", icon: ScrollText },
+      { name: "Disputes", href: "/disputes", icon: Gavel },
     ];
 
     switch (profile?.role) {

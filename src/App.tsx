@@ -45,6 +45,11 @@ import RfqManagement from "./pages/platform/RfqManagement";
 import SampleManagement from "./pages/platform/SampleManagement";
 import InfluencerDiscovery from "./pages/platform/InfluencerDiscovery";
 import UserProfileManagement from "./pages/platform/UserProfileManagement";
+import InvoicingPayments from "./pages/platform/InvoicingPayments";
+import PaymentsWallets from "./pages/platform/PaymentsWallets";
+import EscrowPayment from "./pages/platform/EscrowPayment";
+import ContractGeneration from "./pages/platform/ContractGeneration";
+import DisputeResolution from "./pages/platform/DisputeResolution";
 
 const queryClient = new QueryClient();
 
@@ -98,6 +103,11 @@ const App = () => (
             <Route path="/sample-management" element={<ProtectedRoute requireRole requireProfile><SampleManagement /></ProtectedRoute>} />
             <Route path="/influencer-discovery" element={<ProtectedRoute requireRole requireProfile><InfluencerDiscovery /></ProtectedRoute>} />
             <Route path="/profile-management" element={<ProtectedRoute requireRole requireProfile><UserProfileManagement /></ProtectedRoute>} />
+            <Route path="/invoicing" element={<ProtectedRoute requireRole requireProfile><InvoicingPayments /></ProtectedRoute>} />
+            <Route path="/payments-wallets" element={<ProtectedRoute requireRole requireProfile><PaymentsWallets /></ProtectedRoute>} />
+            <Route path="/escrow" element={<ProtectedRoute requireRole requireProfile><EscrowPayment /></ProtectedRoute>} />
+            <Route path="/contracts" element={<ProtectedRoute requireRole requireProfile><ContractGeneration /></ProtectedRoute>} />
+            <Route path="/disputes" element={<ProtectedRoute requireRole requireProfile><DisputeResolution /></ProtectedRoute>} />
 
             {/* Catch-all */}
             <Route path="*" element={<NotFound />} />

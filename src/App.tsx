@@ -26,6 +26,8 @@ import ManufacturerProfileView from "./pages/brand/ManufacturerProfileView";
 import BrandRfqs from "./pages/brand/BrandRfqs";
 import CreateRfq from "./pages/brand/CreateRfq";
 import BrandProfile from "./pages/brand/BrandProfile";
+import CreateCampaign from "./pages/brand/CreateCampaign";
+import BrandApplications from "./pages/brand/BrandApplications";
 
 // Influencer Pages
 import InfluencerMarketplace from "./pages/influencer/InfluencerMarketplace";
@@ -84,6 +86,8 @@ const App = () => (
             <Route path="/brand/manufacturers/:manufacturerId" element={<ProtectedRoute requireRole requireProfile><ManufacturerProfileView /></ProtectedRoute>} />
             <Route path="/brand/rfqs" element={<ProtectedRoute requireRole requireProfile><BrandRfqs /></ProtectedRoute>} />
             <Route path="/brand/rfqs/create" element={<ProtectedRoute requireRole requireProfile><CreateRfq /></ProtectedRoute>} />
+            <Route path="/brand/campaigns/create" element={<ProtectedRoute requireRole requireProfile><CreateCampaign /></ProtectedRoute>} />
+            <Route path="/brand/applications" element={<ProtectedRoute requireRole requireProfile><BrandApplications /></ProtectedRoute>} />
 
             {/* Influencer routes */}
             <Route path="/influencer/profile" element={<ProtectedRoute requireRole requireProfile><InfluencerProfile /></ProtectedRoute>} />

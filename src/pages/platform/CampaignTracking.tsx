@@ -1,39 +1,75 @@
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { BarChart3, Eye, Heart, Share2, TrendingUp, Target, DollarSign, Users, ArrowRight } from "lucide-react";
-
-const campaigns = [
-  { name: "Summer Glow Collection", status: "Active", progress: 72, impressions: "2.4M", engagement: "4.8%", roi: "340%", influencers: 8 },
-  { name: "Clean Beauty Launch", status: "Active", progress: 45, impressions: "1.1M", engagement: "5.2%", roi: "210%", influencers: 5 },
-  { name: "Holiday Gift Sets", status: "Planning", progress: 15, impressions: "-", engagement: "-", roi: "-", influencers: 12 },
-  { name: "Anti-Aging Serum Push", status: "Completed", progress: 100, impressions: "4.7M", engagement: "6.1%", roi: "520%", influencers: 15 },
-];
+import { useFirebaseAuth } from "@/contexts/FirebaseAuthContext";
+import { getCampaignsByBrand, Campaign } from "@/services/firestore/campaigns";
+import { getApplicationsForTarget } from "@/services/firestore/applications";
+import { BarChart3, Eye, Heart, TrendingUp, Target, DollarSign, Users, ArrowRight, Loader2, Inbox } from "lucide-react";
 
 export default function CampaignTracking() {
+  const { user, profile: authProfile } = useFirebaseAuth();
+  const [campaigns, setCampaigns] = useState<(Campaign & { applicants: number })[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCampaigns = async () => {
+      if (!user) return;
+      setLoading(true);
+      try {
+        const data = await getCampaignsByBrand(user.uid);
+        // Fetch application counts for each campaign
+        const enriched = await Promise.all(
+          data.map(async (c) => {
+            try {
+              const apps = await getApplicationsForTarget(c.id);
+              return { ...c, applicants: apps.length };
+            } catch {
+              return { ...c, applicants: 0 };
+            }
+          })
+        );
+        // Sort newest first
+        enriched.sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
+        setCampaigns(enriched);
+      } catch (e) {
+        console.error("Error fetching campaigns:", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCampaigns();
+  }, [user]);
+
+  const activeCampaigns = campaigns.filter((c) => c.status === "active").length;
+  const totalApplicants = campaigns.reduce((sum, c) => sum + c.applicants, 0);
+
   return (
     <DashboardLayout>
       <div className="space-y-8">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Campaign Success Tracking</h1>
-            <p className="text-muted-foreground">Monitor performance across all active campaigns</p>
+            <p className="text-muted-foreground">Monitor performance across all your campaigns</p>
           </div>
-          <Button className="gap-2">
-            <Target className="h-4 w-4" />
-            New Campaign
+          <Button className="gap-2" asChild>
+            <Link to="/brand/campaigns/create">
+              <Target className="h-4 w-4" />
+              New Campaign
+            </Link>
           </Button>
         </div>
 
         {/* Overview Stats */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
-            { label: "Total Impressions", value: "8.2M", icon: Eye, change: "+12%" },
-            { label: "Avg Engagement", value: "5.4%", icon: Heart, change: "+0.8%" },
-            { label: "Campaign ROI", value: "356%", icon: DollarSign, change: "+24%" },
-            { label: "Active Influencers", value: "28", icon: Users, change: "+3" },
+            { label: "Total Campaigns", value: String(campaigns.length), icon: Target },
+            { label: "Active Campaigns", value: String(activeCampaigns), icon: Eye },
+            { label: "Total Applicants", value: String(totalApplicants), icon: Users },
+            { label: "Avg Applicants", value: campaigns.length ? String(Math.round(totalApplicants / campaigns.length)) : "0", icon: TrendingUp },
           ].map((stat) => {
             const Icon = stat.icon;
             return (
@@ -48,11 +84,6 @@ export default function CampaignTracking() {
                       <Icon className="h-5 w-5 text-primary" />
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 mt-2">
-                    <TrendingUp className="h-3 w-3 text-manufacturer" />
-                    <span className="text-xs text-manufacturer font-medium">{stat.change}</span>
-                    <span className="text-xs text-muted-foreground">vs last month</span>
-                  </div>
                 </CardContent>
               </Card>
             );
@@ -65,66 +96,57 @@ export default function CampaignTracking() {
             <CardTitle>All Campaigns</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {campaigns.map((campaign) => (
-                <div key={campaign.name} className="flex flex-col md:flex-row md:items-center justify-between p-4 rounded-lg border bg-secondary/20 hover:bg-secondary/40 transition-colors gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3">
-                      <h4 className="font-semibold text-foreground">{campaign.name}</h4>
-                      <Badge variant={campaign.status === "Active" ? "default" : campaign.status === "Completed" ? "secondary" : "outline"}>
-                        {campaign.status}
-                      </Badge>
-                    </div>
-                    <div className="mt-2">
-                      <div className="flex items-center gap-2">
-                        <Progress value={campaign.progress} className="flex-1 max-w-[200px]" />
-                        <span className="text-xs text-muted-foreground">{campaign.progress}%</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-6">
-                    <div className="text-center">
-                      <p className="text-xs text-muted-foreground">Impressions</p>
-                      <p className="font-semibold text-foreground">{campaign.impressions}</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-xs text-muted-foreground">Engagement</p>
-                      <p className="font-semibold text-foreground">{campaign.engagement}</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-xs text-muted-foreground">ROI</p>
-                      <p className="font-semibold text-manufacturer">{campaign.roi}</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-xs text-muted-foreground">Influencers</p>
-                      <p className="font-semibold text-foreground">{campaign.influencers}</p>
-                    </div>
-                    <Button variant="ghost" size="sm">
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Performance Chart Placeholder */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-primary" />
-              Performance Overview
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-64 rounded-lg bg-secondary/30 flex items-center justify-center border border-dashed border-border">
-              <div className="text-center">
-                <BarChart3 className="h-12 w-12 text-muted-foreground/30 mx-auto" />
-                <p className="mt-2 text-sm text-muted-foreground">Interactive performance charts</p>
-                <p className="text-xs text-muted-foreground">Coming in next update</p>
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
-            </div>
+            ) : campaigns.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <div className="rounded-full bg-secondary p-4 mb-4">
+                  <Inbox className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <h3 className="text-lg font-semibold text-foreground mb-1">No campaigns yet</h3>
+                <p className="text-sm text-muted-foreground max-w-sm">Create your first campaign to start attracting influencer applications.</p>
+                <Button asChild className="mt-4">
+                  <Link to="/brand/campaigns/create">Create Campaign</Link>
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {campaigns.map((campaign) => (
+                  <div key={campaign.id} className="flex flex-col md:flex-row md:items-center justify-between p-4 rounded-lg border bg-secondary/20 hover:bg-secondary/40 transition-colors gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3">
+                        <h4 className="font-semibold text-foreground">{campaign.title}</h4>
+                        <Badge variant={campaign.status === "active" ? "default" : "secondary"} className="capitalize">
+                          {campaign.status}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-1 line-clamp-1">{campaign.description}</p>
+                    </div>
+                    <div className="flex items-center gap-6">
+                      <div className="text-center">
+                        <p className="text-xs text-muted-foreground">Category</p>
+                        <p className="font-semibold text-foreground">{campaign.category}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs text-muted-foreground">Budget</p>
+                        <p className="font-semibold text-foreground">{campaign.budget || "—"}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs text-muted-foreground">Applicants</p>
+                        <p className="font-semibold text-primary">{campaign.applicants}</p>
+                      </div>
+                      <Button variant="ghost" size="sm" asChild>
+                        <Link to="/brand/applications">
+                          <ArrowRight className="h-4 w-4" />
+                        </Link>
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

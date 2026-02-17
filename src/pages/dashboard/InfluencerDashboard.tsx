@@ -7,15 +7,11 @@ import { ApplicationStatusBadge } from "@/components/influencer/ApplicationStatu
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import {
-  Megaphone,
-  Package,
-  FileCheck,
-  ArrowRight,
-  CheckCircle,
-  Mail,
-  Loader2,
+  Megaphone, Package, FileCheck, ArrowRight, CheckCircle, Mail,
+  Loader2, User, BarChart3, Target, XCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface InfluencerProfile {
   name: string;
@@ -37,12 +33,7 @@ export default function InfluencerDashboard() {
         const profileDoc = await getDoc(doc(db, "influencerProfiles", user.uid));
         if (profileDoc.exists()) {
           const data = profileDoc.data();
-          setProfile({
-            name: data.name,
-            firstName: data.firstName,
-            lastName: data.lastName,
-            primaryPlatform: data.primaryPlatform,
-          });
+          setProfile({ name: data.name, firstName: data.firstName, lastName: data.lastName, primaryPlatform: data.primaryPlatform });
         }
       } catch (error) {
         console.error("Error fetching influencer profile:", error);
@@ -52,14 +43,14 @@ export default function InfluencerDashboard() {
   }, [user]);
 
   const displayName = profile?.firstName || profile?.name || authProfile?.email?.split("@")[0] || "User";
-
   const pendingApps = applications.filter((a) => a.status === "pending").length;
   const acceptedApps = applications.filter((a) => a.status === "accepted").length;
+  const rejectedApps = applications.filter((a) => a.status === "rejected").length;
 
   const stats = [
-    { label: "Available Campaigns", value: String(campaigns.length), icon: Megaphone, color: "text-primary" },
-    { label: "White-Label Offers", value: String(whiteLabelOffers.length), icon: Package, color: "text-manufacturer" },
-    { label: "My Applications", value: String(applications.length), icon: FileCheck, color: "text-influencer" },
+    { label: "Available Campaigns", value: String(campaigns.length), icon: Megaphone, color: "text-primary", href: "/influencer/marketplace" },
+    { label: "White-Label Offers", value: String(whiteLabelOffers.length), icon: Package, color: "text-manufacturer", href: "/influencer/marketplace" },
+    { label: "My Applications", value: String(applications.length), icon: FileCheck, color: "text-influencer", href: "/influencer/applications" },
   ];
 
   return (
@@ -68,12 +59,8 @@ export default function InfluencerDashboard() {
         <div className="flex-1 space-y-8">
           {/* Welcome */}
           <div>
-            <h1 className="text-2xl font-bold text-foreground">
-              Welcome back, {displayName}!
-            </h1>
-            <p className="mt-1 text-muted-foreground">
-              Here's a summary of your collaborations and marketplace opportunities.
-            </p>
+            <h1 className="text-2xl font-bold text-foreground">Welcome back, {displayName}!</h1>
+            <p className="mt-1 text-muted-foreground">Here's a summary of your collaborations and marketplace opportunities.</p>
           </div>
 
           {/* Stats */}
@@ -86,13 +73,15 @@ export default function InfluencerDashboard() {
               {stats.map((stat) => {
                 const Icon = stat.icon;
                 return (
-                  <div key={stat.label} className="stat-card">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Icon className={`h-5 w-5 ${stat.color}`} />
-                      <span className="text-sm text-muted-foreground">{stat.label}</span>
-                    </div>
-                    <span className="text-3xl font-bold text-foreground">{stat.value}</span>
-                  </div>
+                  <Card key={stat.label} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate(stat.href)}>
+                    <CardContent className="pt-6">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Icon className={`h-5 w-5 ${stat.color}`} />
+                        <span className="text-sm text-muted-foreground">{stat.label}</span>
+                      </div>
+                      <span className="text-3xl font-bold text-foreground">{stat.value}</span>
+                    </CardContent>
+                  </Card>
                 );
               })}
             </div>
@@ -100,35 +89,21 @@ export default function InfluencerDashboard() {
 
           {/* Quick Actions */}
           <div className="grid gap-4 sm:grid-cols-2">
-            <Button
-              variant="outline"
-              className="h-auto p-6 justify-start"
-              onClick={() => navigate("/influencer/marketplace")}
-            >
+            <Button variant="outline" className="h-auto p-6 justify-start" onClick={() => navigate("/influencer/marketplace")}>
               <div className="flex items-center gap-4">
-                <div className="rounded-lg bg-primary/10 p-3">
-                  <Megaphone className="h-6 w-6 text-primary" />
-                </div>
+                <div className="rounded-lg bg-primary/10 p-3"><Megaphone className="h-6 w-6 text-primary" /></div>
                 <div className="text-left">
                   <p className="font-semibold text-foreground">Browse Marketplace</p>
                   <p className="text-sm text-muted-foreground">Discover campaigns & offers</p>
                 </div>
               </div>
             </Button>
-            <Button
-              variant="outline"
-              className="h-auto p-6 justify-start"
-              onClick={() => navigate("/influencer/applications")}
-            >
+            <Button variant="outline" className="h-auto p-6 justify-start" onClick={() => navigate("/influencer/applications")}>
               <div className="flex items-center gap-4">
-                <div className="rounded-lg bg-influencer/10 p-3">
-                  <FileCheck className="h-6 w-6 text-influencer" />
-                </div>
+                <div className="rounded-lg bg-influencer/10 p-3"><FileCheck className="h-6 w-6 text-influencer" /></div>
                 <div className="text-left">
                   <p className="font-semibold text-foreground">My Applications</p>
-                  <p className="text-sm text-muted-foreground">
-                    {pendingApps} pending · {acceptedApps} accepted
-                  </p>
+                  <p className="text-sm text-muted-foreground">{pendingApps} pending · {acceptedApps} accepted</p>
                 </div>
               </div>
             </Button>
@@ -160,11 +135,9 @@ export default function InfluencerDashboard() {
                   </thead>
                   <tbody className="divide-y divide-border">
                     {applications.slice(0, 5).map((app) => (
-                      <tr key={app.id} className="hover:bg-secondary/50">
+                      <tr key={app.id} className="hover:bg-secondary/50 cursor-pointer" onClick={() => navigate("/influencer/applications")}>
                         <td className="px-6 py-4 text-sm font-medium text-foreground">{app.targetTitle}</td>
-                        <td className="px-6 py-4 text-sm text-muted-foreground capitalize">
-                          {app.targetType === "whiteLabelOffer" ? "White-Label" : "Campaign"}
-                        </td>
+                        <td className="px-6 py-4 text-sm text-muted-foreground capitalize">{app.targetType === "whiteLabelOffer" ? "White-Label" : "Campaign"}</td>
                         <td className="px-6 py-4"><ApplicationStatusBadge status={app.status} /></td>
                       </tr>
                     ))}
@@ -172,21 +145,6 @@ export default function InfluencerDashboard() {
                 </table>
               </div>
             )}
-          </div>
-
-          {/* Profile summary */}
-          <div className="form-section">
-            <h2 className="text-lg font-semibold text-foreground">Your Profile</h2>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <div>
-                <span className="text-sm text-muted-foreground">Name</span>
-                <p className="font-medium text-foreground">{profile?.name || "-"}</p>
-              </div>
-              <div>
-                <span className="text-sm text-muted-foreground">Primary Platform</span>
-                <p className="font-medium text-foreground">{profile?.primaryPlatform || "-"}</p>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -197,29 +155,39 @@ export default function InfluencerDashboard() {
             <h3 className="font-semibold text-foreground mb-4">Application Summary</h3>
             <div className="space-y-3">
               <div className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-success" />
-                  <span className="text-sm text-foreground">Accepted</span>
-                </div>
+                <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-success" /><span className="text-sm text-foreground">Accepted</span></div>
                 <span className="text-sm font-bold text-foreground">{acceptedApps}</span>
               </div>
               <div className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-warning" />
-                  <span className="text-sm text-foreground">Pending</span>
-                </div>
+                <div className="flex items-center gap-2"><Mail className="h-4 w-4 text-warning" /><span className="text-sm text-foreground">Pending</span></div>
                 <span className="text-sm font-bold text-foreground">{pendingApps}</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
+                <div className="flex items-center gap-2"><XCircle className="h-4 w-4 text-destructive" /><span className="text-sm text-foreground">Rejected</span></div>
+                <span className="text-sm font-bold text-foreground">{rejectedApps}</span>
               </div>
             </div>
           </div>
 
-          {/* Getting Started */}
+          {/* Quick Links */}
           <div className="bg-card rounded-xl border shadow-sm p-6">
-            <h3 className="font-semibold text-foreground mb-4">Getting Started</h3>
-            <div className="space-y-3 text-sm text-muted-foreground">
-              <p>1. Browse the <strong>Marketplace</strong> for opportunities</p>
-              <p>2. Apply to campaigns or white-label offers</p>
-              <p>3. Track your applications from the dashboard</p>
+            <h3 className="font-semibold text-foreground mb-4">Quick Links</h3>
+            <div className="space-y-3">
+              <Button variant="outline" className="w-full justify-start" onClick={() => navigate("/influencer/profile")}>
+                <User className="mr-3 h-4 w-4 text-influencer" />My Profile
+              </Button>
+              <Button variant="outline" className="w-full justify-start" onClick={() => navigate("/influencer/marketplace")}>
+                <Megaphone className="mr-3 h-4 w-4 text-primary" />Marketplace
+              </Button>
+              <Button variant="outline" className="w-full justify-start" onClick={() => navigate("/influencer/applications")}>
+                <FileCheck className="mr-3 h-4 w-4 text-primary" />My Applications
+              </Button>
+              <Button variant="outline" className="w-full justify-start" onClick={() => navigate("/analytics")}>
+                <BarChart3 className="mr-3 h-4 w-4 text-primary" />Analytics
+              </Button>
+              <Button variant="outline" className="w-full justify-start" onClick={() => navigate("/campaign-tracking")}>
+                <Target className="mr-3 h-4 w-4 text-primary" />Campaigns
+              </Button>
             </div>
           </div>
         </div>

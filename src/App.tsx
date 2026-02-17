@@ -39,6 +39,7 @@ import AIMatching from "./pages/platform/AIMatching";
 import Messaging from "./pages/platform/Messaging";
 import PlatformSettings from "./pages/platform/Settings";
 import CampaignTracking from "./pages/platform/CampaignTracking";
+import CampaignManager from "./pages/platform/CampaignManager";
 import MarketIntelligence from "./pages/platform/MarketIntelligence";
 import IngredientDatabase from "./pages/platform/IngredientDatabase";
 import Analytics from "./pages/platform/Analytics";
@@ -101,6 +102,7 @@ const App = () => (
             <Route path="/market-intelligence" element={<ProtectedRoute requireRole requireProfile><MarketIntelligence /></ProtectedRoute>} />
             <Route path="/ingredients" element={<ProtectedRoute requireRole requireProfile><IngredientDatabase /></ProtectedRoute>} />
             <Route path="/campaign-tracking" element={<ProtectedRoute requireRole requireProfile><CampaignTracking /></ProtectedRoute>} />
+            <Route path="/campaign-manager" element={<ProtectedRoute requireRole requireProfile><CampaignManager /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute requireRole requireProfile><PlatformSettings /></ProtectedRoute>} />
             <Route path="/compliance" element={<ProtectedRoute requireRole requireProfile><RegulatoryCompliance /></ProtectedRoute>} />
             <Route path="/rfq-management" element={<ProtectedRoute requireRole requireProfile><RfqManagement /></ProtectedRoute>} />

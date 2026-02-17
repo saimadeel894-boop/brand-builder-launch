@@ -6,8 +6,9 @@ import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useBrandRfqs } from "@/hooks/useBrandRfqs";
 import { RfqStatusBadge } from "@/components/brand/RfqStatusBadge";
-import { 
+import {
   Building2, FileText, Factory, Plus, ArrowRight, Search, Target, Users,
+  BarChart3, Megaphone, Settings2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -155,10 +156,19 @@ export default function BrandDashboard() {
                 <FileText className="mr-3 h-4 w-4 text-primary" />View All RFQs
               </Button>
               <Button variant="outline" className="w-full justify-start" onClick={() => navigate("/brand/campaigns/create")}>
-                <Target className="mr-3 h-4 w-4 text-primary" />Create Campaign
+                <Megaphone className="mr-3 h-4 w-4 text-primary" />Create Campaign
+              </Button>
+              <Button variant="outline" className="w-full justify-start" onClick={() => navigate("/campaign-tracking")}>
+                <BarChart3 className="mr-3 h-4 w-4 text-primary" />Campaign Tracking
+              </Button>
+              <Button variant="outline" className="w-full justify-start" onClick={() => navigate("/campaign-manager")}>
+                <Settings2 className="mr-3 h-4 w-4 text-primary" />Campaign Manager
               </Button>
               <Button variant="outline" className="w-full justify-start" onClick={() => navigate("/brand/applications")}>
                 <Users className="mr-3 h-4 w-4 text-primary" />View Applications
+              </Button>
+              <Button variant="outline" className="w-full justify-start" onClick={() => navigate("/brand/profile")}>
+                <Building2 className="mr-3 h-4 w-4 text-brand" />Brand Profile
               </Button>
             </div>
           </div>
@@ -169,7 +179,7 @@ export default function BrandDashboard() {
               {[
                 { step: "1", title: "Browse Manufacturers", desc: "Find the right partner for your products" },
                 { step: "2", title: "Create an RFQ", desc: "Specify your requirements and send requests" },
-                { step: "3", title: "Review Responses", desc: "Compare quotes and choose your manufacturer" },
+                { step: "3", title: "Launch Campaign", desc: "Attract influencers to promote your brand" },
               ].map((item) => (
                 <div key={item.step} className="flex items-start gap-3">
                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-medium">{item.step}</div>

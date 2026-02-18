@@ -1,190 +1,379 @@
+import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useFirebaseAuth } from "@/contexts/FirebaseAuthContext";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { collection, getDocs, doc, setDoc, getDoc, updateDoc, query, where, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import jsPDF from "jspdf";
 import {
   FileText, Download, Share2, Pen, MessageSquare, Plus, FolderOpen, Handshake, Archive,
+  Loader2, CheckCircle, Clock, Send, Sparkles,
 } from "lucide-react";
 
-const parties = [
-  { name: "Jane Doe (You)", role: "Brand Rep", status: "Signed", statusColor: "text-green-600 bg-green-50" },
-  { name: "Sarah Jenkins", role: "Influencer", status: "Pending", statusColor: "text-yellow-600 bg-yellow-50" },
-  { name: "Robert Chen", role: "Manufacturer", status: "Signed", statusColor: "text-green-600 bg-green-50" },
-];
-
-const activity = [
-  { user: "Jane Doe", action: "Updated compensation terms", time: "2 hours ago" },
-  { user: "Robert Chen", action: "Signed the agreement", time: "5 hours ago" },
-  { user: "System", action: "Contract moved to Negotiation phase", time: "1 day ago" },
-  { user: "Sarah Jenkins", action: "Requested changes to Section 3", time: "2 days ago" },
-];
-
-const workspace = [
-  { label: "Drafts", icon: FolderOpen, count: 4, active: false },
-  { label: "In Negotiation", icon: Handshake, count: 2, active: true },
-  { label: "Pending Signature", icon: Pen, count: 1, active: false },
-  { label: "Archived", icon: Archive, count: null, active: false },
-];
+interface Contract {
+  id: string;
+  title: string;
+  status: "draft" | "sent" | "signed";
+  partyA: string;
+  partyAName: string;
+  partyB: string;
+  partyBName: string;
+  scope: string;
+  deliverables: string;
+  timeline: string;
+  paymentTerms: string;
+  generatedText: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
 
 export default function ContractGeneration() {
+  const { user, profile } = useFirebaseAuth();
+  const { toast } = useToast();
+  const [contracts, setContracts] = useState<Contract[]>([]);
+  const [activeContract, setActiveContract] = useState<Contract | null>(null);
+  const [showNew, setShowNew] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [availableUsers, setAvailableUsers] = useState<{ id: string; name: string; role: string }[]>([]);
+
+  // Form state
+  const [form, setForm] = useState({
+    title: "",
+    partyB: "",
+    scope: "",
+    deliverables: "",
+    timeline: "",
+    paymentTerms: "",
+  });
+
+  useEffect(() => {
+    if (user) loadContracts();
+  }, [user]);
+
+  const loadContracts = async () => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      const snap = await getDocs(
+        query(collection(db, "contracts"), where("partyA", "==", user.uid))
+      );
+      const snap2 = await getDocs(
+        query(collection(db, "contracts"), where("partyB", "==", user.uid))
+      );
+      const all = new Map<string, Contract>();
+      [...snap.docs, ...snap2.docs].forEach(d => {
+        const data = d.data();
+        all.set(d.id, {
+          id: d.id,
+          title: data.title,
+          status: data.status,
+          partyA: data.partyA,
+          partyAName: data.partyAName,
+          partyB: data.partyB,
+          partyBName: data.partyBName,
+          scope: data.scope,
+          deliverables: data.deliverables,
+          timeline: data.timeline,
+          paymentTerms: data.paymentTerms,
+          generatedText: data.generatedText || "",
+          createdAt: data.createdAt?.toDate(),
+          updatedAt: data.updatedAt?.toDate(),
+        });
+      });
+      const list = Array.from(all.values()).sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
+      setContracts(list);
+      if (list.length > 0 && !activeContract) setActiveContract(list[0]);
+    } catch (err) {
+      console.error("Error loading contracts:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadUsers = async () => {
+    if (!user) return;
+    const users: { id: string; name: string; role: string }[] = [];
+    const mfgSnap = await getDocs(collection(db, "manufacturerProfiles"));
+    mfgSnap.forEach(d => { if (d.id !== user.uid) users.push({ id: d.id, name: d.data().companyName, role: "Manufacturer" }); });
+    const brandSnap = await getDocs(collection(db, "brandProfiles"));
+    brandSnap.forEach(d => { if (d.id !== user.uid) users.push({ id: d.id, name: d.data().brandName, role: "Brand" }); });
+    const infSnap = await getDocs(collection(db, "influencerProfiles"));
+    infSnap.forEach(d => { if (d.id !== user.uid) users.push({ id: d.id, name: d.data().name, role: "Influencer" }); });
+    setAvailableUsers(users);
+  };
+
+  const generateContract = async () => {
+    if (!form.title || !form.partyB || !user) return;
+    setGenerating(true);
+
+    const target = availableUsers.find(u => u.id === form.partyB);
+    const myName = profile?.email?.split("@")[0] || "Party A";
+
+    try {
+      // Try AI enhancement
+      let generatedText = "";
+      try {
+        const { data, error } = await supabase.functions.invoke("ai-match", {
+          body: {
+            type: "contract",
+            candidates: `Generate a professional contract with the following details:
+Title: ${form.title}
+Party A: ${myName}
+Party B: ${target?.name || "Party B"}
+Scope: ${form.scope}
+Deliverables: ${form.deliverables}
+Timeline: ${form.timeline}
+Payment Terms: ${form.paymentTerms}
+
+Generate formal legal contract text with sections: 1. Parties, 2. Scope of Services, 3. Deliverables, 4. Timeline, 5. Compensation, 6. Terms and Conditions, 7. Signatures. Use professional language.`,
+          },
+        });
+        if (!error && data?.result) generatedText = data.result;
+      } catch {
+        // Fallback template
+        generatedText = `CONTRACT AGREEMENT\n\nTitle: ${form.title}\n\n1. PARTIES\nThis Agreement is entered into between ${myName} ("Party A") and ${target?.name || "Party B"} ("Party B").\n\n2. SCOPE OF SERVICES\n${form.scope}\n\n3. DELIVERABLES\n${form.deliverables}\n\n4. TIMELINE\n${form.timeline}\n\n5. COMPENSATION\n${form.paymentTerms}\n\n6. TERMS AND CONDITIONS\nBoth parties agree to perform their respective obligations in good faith.\n\n7. SIGNATURES\n\n_______________          _______________\n${myName}               ${target?.name || "Party B"}`;
+      }
+
+      const docRef = doc(collection(db, "contracts"));
+      await setDoc(docRef, {
+        title: form.title,
+        status: "draft",
+        partyA: user.uid,
+        partyAName: myName,
+        partyB: form.partyB,
+        partyBName: target?.name || "Party B",
+        scope: form.scope,
+        deliverables: form.deliverables,
+        timeline: form.timeline,
+        paymentTerms: form.paymentTerms,
+        generatedText,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+
+      toast({ title: "Contract Created", description: "AI-enhanced contract has been generated." });
+      setShowNew(false);
+      setForm({ title: "", partyB: "", scope: "", deliverables: "", timeline: "", paymentTerms: "" });
+      await loadContracts();
+    } catch (err) {
+      toast({ title: "Error", description: "Failed to generate contract", variant: "destructive" });
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const updateStatus = async (contract: Contract, newStatus: "sent" | "signed") => {
+    if (contract.status === "signed") {
+      toast({ title: "Locked", description: "Signed contracts cannot be modified.", variant: "destructive" });
+      return;
+    }
+    try {
+      await updateDoc(doc(db, "contracts", contract.id), { status: newStatus, updatedAt: serverTimestamp() });
+      toast({ title: "Updated", description: `Contract marked as ${newStatus}.` });
+      await loadContracts();
+      if (activeContract?.id === contract.id) {
+        setActiveContract({ ...contract, status: newStatus });
+      }
+    } catch {
+      toast({ title: "Error", description: "Failed to update status", variant: "destructive" });
+    }
+  };
+
+  const downloadPdf = (contract: Contract) => {
+    const pdf = new jsPDF();
+    const margin = 20;
+    const pageWidth = pdf.internal.pageSize.getWidth() - margin * 2;
+
+    pdf.setFontSize(18);
+    pdf.text(contract.title, margin, 30);
+
+    pdf.setFontSize(10);
+    pdf.text(`Status: ${contract.status.toUpperCase()}`, margin, 40);
+    pdf.text(`Generated: ${contract.createdAt?.toLocaleDateString() || "N/A"}`, margin, 46);
+
+    pdf.setFontSize(11);
+    const lines = pdf.splitTextToSize(contract.generatedText, pageWidth);
+    let y = 58;
+    for (const line of lines) {
+      if (y > 270) {
+        pdf.addPage();
+        y = 20;
+      }
+      pdf.text(line, margin, y);
+      y += 6;
+    }
+
+    pdf.save(`${contract.title.replace(/\s+/g, "_")}.pdf`);
+  };
+
+  const statusIcon = (status: string) => {
+    switch (status) {
+      case "signed": return <CheckCircle className="h-4 w-4 text-green-600" />;
+      case "sent": return <Send className="h-4 w-4 text-primary" />;
+      default: return <Clock className="h-4 w-4 text-muted-foreground" />;
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex flex-wrap justify-between items-start gap-4">
           <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-xl md:text-2xl font-bold">Influencer Marketing Agreement - Summer Campaign</h1>
-              <Badge variant="outline" className="text-primary border-primary/20 bg-primary/10 text-xs">v3.2 Draft</Badge>
-            </div>
-            <p className="text-sm text-muted-foreground mt-1">Reference ID: #CTR-2024-892 • Last auto-saved at 14:30</p>
+            <h1 className="text-xl md:text-2xl font-bold">Contract Generation</h1>
+            <p className="text-sm text-muted-foreground mt-1">Create, manage, and sign AI-enhanced contracts</p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="gap-2"><Download className="h-4 w-4" /> Export PDF</Button>
-            <Button variant="outline" size="sm" className="gap-2"><Share2 className="h-4 w-4" /> Share</Button>
+            <Button onClick={() => { setShowNew(true); loadUsers(); }} className="gap-2">
+              <Plus className="h-4 w-4" /> New Contract
+            </Button>
           </div>
         </div>
 
-        {/* Progress Bar */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex justify-between items-center text-xs font-medium text-muted-foreground mb-2">
-              <span>Drafting</span><span>Review</span><span className="text-primary font-bold">Negotiation</span><span>Pending Signature</span><span>Signed</span>
-            </div>
-            <Progress value={55} className="h-2" />
-          </CardContent>
-        </Card>
-
-        {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Workspace Sidebar */}
+          {/* Contract List */}
           <div className="lg:col-span-3 space-y-4">
-            <Button className="w-full gap-2"><Plus className="h-4 w-4" /> New Contract</Button>
             <Card>
-              <CardContent className="p-3">
-                <p className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">My Workspace</p>
-                <div className="space-y-1">
-                  {workspace.map((item, i) => {
-                    const Icon = item.icon;
-                    return (
-                      <div key={i} className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-colors ${item.active ? "bg-primary/10 text-primary" : "hover:bg-secondary"}`}>
-                        <Icon className="h-5 w-5" />
-                        <span className="text-sm font-medium flex-1">{item.label}</span>
-                        {item.count && (
-                          <Badge variant={item.active ? "default" : "secondary"} className="text-xs">{item.count}</Badge>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-                <div className="border-t my-3" />
-                <p className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Templates</p>
-                <div className="space-y-1">
-                  <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-secondary">
-                    <FileText className="h-5 w-5 text-muted-foreground" />
-                    <span className="text-sm font-medium">Influencer Agreement</span>
+              <CardContent className="p-3 space-y-1">
+                {contracts.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4">No contracts yet</p>
+                )}
+                {contracts.map(c => (
+                  <div
+                    key={c.id}
+                    className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-colors ${activeContract?.id === c.id ? "bg-primary/10 text-primary" : "hover:bg-secondary"}`}
+                    onClick={() => setActiveContract(c)}
+                  >
+                    {statusIcon(c.status)}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{c.title}</p>
+                      <p className="text-xs text-muted-foreground">{c.partyBName}</p>
+                    </div>
+                    <Badge variant="outline" className="text-[10px] capitalize">{c.status}</Badge>
                   </div>
-                  <div className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-secondary">
-                    <FileText className="h-5 w-5 text-muted-foreground" />
-                    <span className="text-sm font-medium">Supply Contract</span>
-                  </div>
-                </div>
+                ))}
               </CardContent>
             </Card>
           </div>
 
-          {/* Document Preview */}
-          <Card className="lg:col-span-5">
-            <CardContent className="p-8 bg-secondary/30 min-h-[600px]">
-              <div className="bg-background shadow-sm rounded p-8 md:p-12 space-y-6">
-                <div className="flex justify-between items-center mb-6">
-                  <div className="h-10 w-10 bg-foreground text-background flex items-center justify-center font-bold text-lg rounded">BC</div>
-                  <div className="text-right text-xs text-muted-foreground font-mono">DOC-REF: 8829-XJ<br />PAGE 1 OF 4</div>
-                </div>
-                <h2 className="text-2xl font-bold text-center uppercase tracking-wide">Influencer Marketing Agreement</h2>
-                <p className="text-center text-muted-foreground italic text-sm">This Agreement is made on this 24th day of October, 2023</p>
-                <div className="bg-primary/5 p-4 rounded border-l-4 border-primary/40 space-y-2">
-                  <p className="font-bold text-sm text-primary uppercase tracking-wider">1. Parties Involved</p>
-                  <p className="text-sm"><strong>BETWEEN:</strong> <span className="bg-yellow-100 px-1 rounded">Glow Cosmetics Ltd.</span></p>
-                  <p className="text-sm"><strong>AND:</strong> <span className="bg-yellow-100 px-1 rounded">Sarah Jenkins</span></p>
-                  <p className="text-sm"><strong>AND:</strong> <span className="bg-yellow-100 px-1 rounded">Pure Labs Manufacturing</span></p>
-                </div>
-                <div className="space-y-2">
-                  <p className="font-bold text-sm uppercase tracking-wider">2. Scope of Services</p>
-                  <ul className="list-disc pl-6 text-sm space-y-1 text-muted-foreground">
-                    <li>Three (3) Instagram Reels</li>
-                    <li>One (1) Dedicated YouTube video</li>
-                    <li>Five (5) Instagram Stories</li>
-                  </ul>
-                </div>
-                <div className="space-y-2">
-                  <p className="font-bold text-sm uppercase tracking-wider">3. Compensation</p>
-                  <p className="text-sm">Total fee: <span className="line-through text-red-500">$45,000 USD</span> <span className="text-green-700 font-semibold bg-green-100 px-1 rounded">$50,000 USD</span></p>
-                </div>
-                <div className="grid grid-cols-2 gap-8 mt-8 pt-6 border-t">
-                  <div>
-                    <p className="text-xs uppercase text-muted-foreground mb-6">Signed on behalf of Brand</p>
-                    <div className="h-10 border-b italic text-muted-foreground/50 text-lg">Pending...</div>
-                    <p className="text-sm font-bold mt-2">Glow Cosmetics Ltd.</p>
+          {/* Contract Preview */}
+          {activeContract ? (
+            <>
+              <Card className="lg:col-span-5">
+                <CardContent className="p-8 bg-secondary/30 min-h-[600px]">
+                  <div className="bg-background shadow-sm rounded p-8 space-y-4">
+                    <div className="flex justify-between items-center mb-4">
+                      <div className="h-10 w-10 bg-foreground text-background flex items-center justify-center font-bold text-lg rounded">BC</div>
+                      <Badge className="capitalize">{activeContract.status}</Badge>
+                    </div>
+                    <h2 className="text-xl font-bold text-center">{activeContract.title}</h2>
+                    <div className="whitespace-pre-wrap text-sm text-muted-foreground leading-relaxed mt-4">
+                      {activeContract.generatedText || "No content generated."}
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs uppercase text-muted-foreground mb-6">Signed by Influencer</p>
-                    <div className="h-10 border-b" />
-                    <p className="text-sm font-bold mt-2">Sarah Jenkins</p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
 
-          {/* Right Panel */}
-          <div className="lg:col-span-4 space-y-6">
-            <Card>
-              <CardContent className="p-6 space-y-3">
-                <h3 className="text-sm font-semibold mb-2">Actions</h3>
-                <Button className="w-full gap-2"><Pen className="h-4 w-4" /> Sign Contract</Button>
-                <Button variant="outline" className="w-full gap-2"><MessageSquare className="h-4 w-4" /> Request Changes</Button>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm font-semibold">Parties Involved</CardTitle>
-                  <Button variant="link" size="sm" className="text-xs text-primary p-0 h-auto">Manage</Button>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {parties.map((p, i) => (
-                  <div key={i} className="flex items-center justify-between">
+              <div className="lg:col-span-4 space-y-6">
+                <Card>
+                  <CardContent className="p-6 space-y-3">
+                    <h3 className="text-sm font-semibold mb-2">Actions</h3>
+                    <Button className="w-full gap-2" onClick={() => downloadPdf(activeContract)}>
+                      <Download className="h-4 w-4" /> Download PDF
+                    </Button>
+                    {activeContract.status === "draft" && (
+                      <Button variant="outline" className="w-full gap-2" onClick={() => updateStatus(activeContract, "sent")}>
+                        <Send className="h-4 w-4" /> Send to Party
+                      </Button>
+                    )}
+                    {activeContract.status === "sent" && (
+                      <Button className="w-full gap-2" onClick={() => updateStatus(activeContract, "signed")}>
+                        <Pen className="h-4 w-4" /> Sign Contract
+                      </Button>
+                    )}
+                    {activeContract.status === "signed" && (
+                      <p className="text-sm text-green-600 text-center flex items-center justify-center gap-2">
+                        <CheckCircle className="h-4 w-4" /> Contract is signed and locked
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-semibold">Parties</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
                     <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center text-sm font-bold">{p.name.charAt(0)}</div>
+                      <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center text-sm font-bold">
+                        {activeContract.partyAName.charAt(0)}
+                      </div>
                       <div>
-                        <p className="text-sm font-medium">{p.name}</p>
-                        <p className="text-xs text-muted-foreground">{p.role}</p>
+                        <p className="text-sm font-medium">{activeContract.partyAName}</p>
+                        <p className="text-xs text-muted-foreground">Party A (Creator)</p>
                       </div>
                     </div>
-                    <Badge variant="outline" className={`text-xs ${p.statusColor}`}>{p.status}</Badge>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader><CardTitle className="text-sm font-semibold">Activity Log</CardTitle></CardHeader>
-              <CardContent className="space-y-4">
-                {activity.map((a, i) => (
-                  <div key={i} className="flex gap-3">
-                    <div className="h-2 w-2 mt-2 rounded-full bg-primary/40 shrink-0" />
-                    <div>
-                      <p className="text-sm"><span className="font-medium">{a.user}</span> {a.action}</p>
-                      <p className="text-xs text-muted-foreground">{a.time}</p>
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center text-sm font-bold">
+                        {activeContract.partyBName.charAt(0)}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">{activeContract.partyBName}</p>
+                        <p className="text-xs text-muted-foreground">Party B</p>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </>
+          ) : (
+            <div className="lg:col-span-9 flex items-center justify-center text-muted-foreground">
+              <div className="text-center">
+                <FileText className="h-12 w-12 mx-auto mb-4 opacity-30" />
+                <p className="font-medium">Select a contract or create a new one</p>
+              </div>
+            </div>
+          )}
         </div>
+
+        {/* New Contract Dialog */}
+        <Dialog open={showNew} onOpenChange={setShowNew}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Generate New Contract</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
+              <Input placeholder="Contract Title" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
+              <Select value={form.partyB} onValueChange={v => setForm({ ...form, partyB: v })}>
+                <SelectTrigger><SelectValue placeholder="Select other party" /></SelectTrigger>
+                <SelectContent>
+                  {availableUsers.map(u => (
+                    <SelectItem key={u.id} value={u.id}>{u.name} ({u.role})</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Textarea placeholder="Scope of work" value={form.scope} onChange={e => setForm({ ...form, scope: e.target.value })} />
+              <Textarea placeholder="Deliverables" value={form.deliverables} onChange={e => setForm({ ...form, deliverables: e.target.value })} />
+              <Input placeholder="Timeline (e.g., 3 months)" value={form.timeline} onChange={e => setForm({ ...form, timeline: e.target.value })} />
+              <Input placeholder="Payment terms (e.g., $5,000 on completion)" value={form.paymentTerms} onChange={e => setForm({ ...form, paymentTerms: e.target.value })} />
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowNew(false)}>Cancel</Button>
+              <Button onClick={generateContract} disabled={generating || !form.title || !form.partyB}>
+                {generating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Sparkles className="h-4 w-4 mr-2" />}
+                {generating ? "Generating..." : "Generate with AI"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );

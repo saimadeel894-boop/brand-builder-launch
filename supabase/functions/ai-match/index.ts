@@ -2,8 +2,37 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+async function callOpenAI(apiKey: string, systemPrompt: string, userPrompt: string, retries = 3): Promise<Response> {
+  for (let attempt = 0; attempt < retries; attempt++) {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+      }),
+    });
+
+    if (response.status === 429 && attempt < retries - 1) {
+      const waitMs = Math.pow(2, attempt) * 1000 + Math.random() * 500;
+      console.log(`Rate limited, retrying in ${Math.round(waitMs)}ms (attempt ${attempt + 1}/${retries})`);
+      await new Promise((r) => setTimeout(r, waitMs));
+      continue;
+    }
+
+    return response;
+  }
+  throw new Error("Max retries exceeded");
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -12,6 +41,7 @@ serve(async (req) => {
     const { type, brandProfile, candidates } = await req.json();
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY is not configured");
+
     let systemPrompt = "";
     let userPrompt = "";
 
@@ -23,43 +53,30 @@ serve(async (req) => {
       userPrompt = `Brand campaign: ${JSON.stringify(brandProfile)}\n\nInfluencer candidates:\n${JSON.stringify(candidates)}\n\nReturn a JSON array: [{ "candidateId": "...", "matchScore": number, "explanation": "1-2 sentence reason" }]. Only return valid JSON, no markdown.`;
     } else if (type === "summary") {
       systemPrompt = `You are a professional business analyst. Generate concise summaries for business profiles and conversations. Be factual and professional.`;
-      userPrompt = candidates; // In summary mode, candidates contains the text to summarize
+      userPrompt = candidates;
     } else if (type === "contract") {
       systemPrompt = `You are a legal document assistant specializing in influencer marketing and manufacturing agreements. Generate professional contract text based on the provided details. Use formal legal language but keep it readable.`;
       userPrompt = candidates;
     }
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "gpt-4o",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-      }),
-    });
+    const response = await callOpenAI(OPENAI_API_KEY, systemPrompt, userPrompt);
 
     if (!response.ok) {
       if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again later." }), {
+        return new Response(JSON.stringify({ error: "Rate limit exceeded after retries. Please try again in a minute." }), {
           status: 429,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "AI credits required. Please add funds." }), {
+        return new Response(JSON.stringify({ error: "AI credits required. Please add funds to your OpenAI account." }), {
           status: 402,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       const t = await response.text();
-      console.error("AI gateway error:", response.status, t);
-      throw new Error("AI gateway error");
+      console.error("OpenAI API error:", response.status, t);
+      throw new Error(`OpenAI API error: ${response.status}`);
     }
 
     const data = await response.json();

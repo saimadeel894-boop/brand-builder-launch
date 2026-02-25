@@ -15,6 +15,7 @@ async function callOpenAI(apiKey: string, systemPrompt: string, userPrompt: stri
       },
       body: JSON.stringify({
         model: "gpt-4o-mini",
+        temperature: 0.2,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
@@ -46,11 +47,25 @@ serve(async (req) => {
     let userPrompt = "";
 
     if (type === "manufacturer-match") {
-      systemPrompt = `You are an AI matching engine for a B2B beauty supply chain platform. Score manufacturer candidates for a brand based on category overlap, MOQ compatibility, certifications, and location proximity. Return JSON array with matchScore (0-100) and explanation for each.`;
-      userPrompt = `Brand needs: ${JSON.stringify(brandProfile)}\n\nManufacturer candidates:\n${JSON.stringify(candidates)}\n\nReturn a JSON array: [{ "candidateId": "...", "matchScore": number, "explanation": "1-2 sentence reason" }]. Only return valid JSON, no markdown.`;
+      systemPrompt = `You are an AI matching engine for a B2B beauty supply chain platform. Score each manufacturer candidate using these EXACT criteria weights:
+- Category Overlap (30%): How many of the brand's desired product categories does this manufacturer cover?
+- Certifications Match (25%): Does the manufacturer hold certifications the brand requires or values (e.g. GMP, ISO, organic, cruelty-free)?
+- Location Proximity (20%): Is the manufacturer in the same region/country as the brand, or a logistics-friendly location?
+- MOQ Compatibility (15%): Does the manufacturer's minimum order quantity align with the brand's expected volume?
+- Production Capacity (10%): Based on available signals (lead time, description), can the manufacturer handle the brand's scale?
+
+Calculate a weighted score 0-100 by summing each criterion's sub-score (0-100) multiplied by its weight. Return a JSON array sorted by matchScore descending.`;
+      userPrompt = `Brand profile: ${JSON.stringify(brandProfile)}\n\nManufacturer candidates:\n${JSON.stringify(candidates)}\n\nReturn ONLY a valid JSON array (no markdown): [{ "candidateId": "...", "matchScore": number, "explanation": "1-2 sentence reason citing which criteria drove the score" }]`;
     } else if (type === "influencer-match") {
-      systemPrompt = `You are an AI matching engine for influencer marketing. Score influencer candidates for a brand based on niche alignment, audience size, platform match, and engagement potential. Return JSON array with matchScore (0-100) and explanation.`;
-      userPrompt = `Brand campaign: ${JSON.stringify(brandProfile)}\n\nInfluencer candidates:\n${JSON.stringify(candidates)}\n\nReturn a JSON array: [{ "candidateId": "...", "matchScore": number, "explanation": "1-2 sentence reason" }]. Only return valid JSON, no markdown.`;
+      systemPrompt = `You are an AI matching engine for influencer marketing. Score each influencer candidate using these EXACT criteria weights:
+- Niche Alignment (30%): How well does the influencer's content niche match the brand's industry/products?
+- Platform Match (25%): Is the influencer active on the brand's target platform(s)?
+- Location Relevance (20%): Is the influencer in or relevant to the brand's target market geography?
+- Engagement Potential (15%): Based on available signals, estimate engagement quality.
+- Content Quality (10%): Based on niche specialization and profile signals, estimate content fit.
+
+Calculate a weighted score 0-100 by summing each criterion's sub-score (0-100) multiplied by its weight. Return a JSON array sorted by matchScore descending.`;
+      userPrompt = `Brand campaign: ${JSON.stringify(brandProfile)}\n\nInfluencer candidates:\n${JSON.stringify(candidates)}\n\nReturn ONLY a valid JSON array (no markdown): [{ "candidateId": "...", "matchScore": number, "explanation": "1-2 sentence reason citing which criteria drove the score" }]`;
     } else if (type === "summary") {
       systemPrompt = `You are a professional business analyst. Generate concise summaries for business profiles and conversations. Be factual and professional.`;
       userPrompt = candidates;

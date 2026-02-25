@@ -21,6 +21,88 @@ interface MatchResult {
   role: string;
 }
 
+// Weighted rule-based scoring for manufacturer fallback
+function scoreManufacturer(brand: any, mfg: any): { score: number; explanation: string } {
+  const brandCategories: string[] = brand?.categories || brand?.productCategories || [];
+  const brandCerts: string[] = brand?.certifications || [];
+  const brandLocation: string = (brand?.location || "").toLowerCase();
+  const brandMoq: string = brand?.moq || brand?.annualVolume || "";
+
+  // Category overlap (30%)
+  const mfgCats: string[] = mfg.categories || [];
+  const catOverlap = brandCategories.length > 0
+    ? mfgCats.filter((c: string) => brandCategories.some((bc: string) => bc.toLowerCase() === c.toLowerCase())).length / Math.max(brandCategories.length, 1)
+    : mfgCats.length > 0 ? 0.5 : 0.3;
+  const catScore = Math.min(1, catOverlap) * 100;
+
+  // Certifications match (25%)
+  const mfgCerts: string[] = mfg.certifications || [];
+  const certOverlap = brandCerts.length > 0
+    ? mfgCerts.filter((c: string) => brandCerts.some((bc: string) => bc.toLowerCase() === c.toLowerCase())).length / Math.max(brandCerts.length, 1)
+    : mfgCerts.length > 0 ? 0.6 : 0.2;
+  const certScore = Math.min(1, certOverlap) * 100;
+
+  // Location proximity (20%)
+  const mfgLoc = (mfg.location || "").toLowerCase();
+  const locScore = brandLocation && mfgLoc
+    ? (mfgLoc.includes(brandLocation) || brandLocation.includes(mfgLoc) ? 100 : 40)
+    : 50;
+
+  // MOQ compatibility (15%)
+  const moqScore = mfg.moq ? 70 : 50; // Basic: has MOQ info = better
+
+  // Capacity signal (10%) - based on having description/lead time
+  const capScore = (mfg.description ? 50 : 20) + (mfg.leadTime ? 30 : 0) + (mfg.categories?.length > 2 ? 20 : 0);
+
+  const weighted = catScore * 0.3 + certScore * 0.25 + locScore * 0.2 + moqScore * 0.15 + Math.min(100, capScore) * 0.1;
+  const final = Math.round(Math.min(100, Math.max(0, weighted)));
+
+  const parts: string[] = [];
+  if (catScore >= 70) parts.push(`strong category match (${mfgCats.slice(0, 2).join(", ")})`);
+  if (certScore >= 70) parts.push(`${mfgCerts.length} relevant certifications`);
+  if (locScore >= 80) parts.push("location aligned");
+  const explanation = parts.length > 0 ? `Score driven by ${parts.join("; ")}.` : `${mfgCats.length} categories, ${mfgCerts.length} certifications available.`;
+
+  return { score: final, explanation };
+}
+
+// Weighted rule-based scoring for influencer fallback
+function scoreInfluencer(brand: any, inf: any): { score: number; explanation: string } {
+  const brandIndustry = (brand?.industry || brand?.niche || "").toLowerCase();
+  const brandLocation = (brand?.location || "").toLowerCase();
+  const brandPlatform = (brand?.targetPlatform || "").toLowerCase();
+
+  // Niche alignment (30%)
+  const niche = (inf.niche || "").toLowerCase();
+  const nicheScore = brandIndustry && niche
+    ? (niche.includes(brandIndustry) || brandIndustry.includes(niche) ? 90 : 45)
+    : niche ? 50 : 30;
+
+  // Platform match (25%)
+  const platform = (inf.primaryPlatform || "").toLowerCase();
+  const platformScore = brandPlatform
+    ? (platform === brandPlatform ? 100 : 40)
+    : platform ? 60 : 30;
+
+  // Location relevance (20%)
+  const infLoc = (inf.location || "").toLowerCase();
+  const locScore = brandLocation && infLoc
+    ? (infLoc.includes(brandLocation) || brandLocation.includes(infLoc) ? 100 : 40)
+    : 50;
+
+  // Engagement potential (15%) - proxy from available data
+  const engScore = inf.followers ? Math.min(100, 40 + Math.log10(inf.followers) * 15) : 50;
+
+  // Content quality (10%) - proxy
+  const contentScore = niche && niche !== "general" ? 70 : 40;
+
+  const weighted = nicheScore * 0.3 + platformScore * 0.25 + locScore * 0.2 + engScore * 0.15 + contentScore * 0.1;
+  const final = Math.round(Math.min(100, Math.max(0, weighted)));
+
+  const explanation = `Active on ${inf.primaryPlatform || "Unknown"}. Niche: ${inf.niche || "General"}. Weighted score based on alignment criteria.`;
+  return { score: final, explanation };
+}
+
 export default function AIMatching() {
   const { user, profile } = useFirebaseAuth();
   const { toast } = useToast();
@@ -93,30 +175,36 @@ export default function AIMatching() {
               });
               setManufacturerMatches(results.sort((a, b) => b.matchScore - a.matchScore));
             } catch {
-              // Fallback: rule-based scoring
-              const fallback = manufacturers.map(m => ({
-                candidateId: m.id,
-                candidateName: m.companyName,
-                matchScore: Math.floor(60 + Math.random() * 35),
-                explanation: `Matches on ${m.categories.length} categories. ${m.certifications.length} certifications.`,
-                categories: m.categories,
-                location: m.location || "Unknown",
-                role: "Manufacturer",
-              }));
+              // Fallback: deterministic weighted scoring
+              const fallback = manufacturers.map(m => {
+                const { score, explanation } = scoreManufacturer(brandContext, m);
+                return {
+                  candidateId: m.id,
+                  candidateName: m.companyName,
+                  matchScore: score,
+                  explanation,
+                  categories: m.categories,
+                  location: m.location || "Unknown",
+                  role: "Manufacturer",
+                };
+              });
               setManufacturerMatches(fallback.sort((a, b) => b.matchScore - a.matchScore));
             }
           }
         } catch {
-          // Rule-based fallback
-          const fallback = manufacturers.map(m => ({
-            candidateId: m.id,
-            candidateName: m.companyName,
-            matchScore: Math.floor(60 + Math.random() * 35),
-            explanation: `${m.categories.length} category matches. ${m.certifications.length} certifications.`,
-            categories: m.categories,
-            location: m.location || "Unknown",
-            role: "Manufacturer",
-          }));
+          // Rule-based weighted fallback
+          const fallback = manufacturers.map(m => {
+            const { score, explanation } = scoreManufacturer(brandContext, m);
+            return {
+              candidateId: m.id,
+              candidateName: m.companyName,
+              matchScore: score,
+              explanation,
+              categories: m.categories,
+              location: m.location || "Unknown",
+              role: "Manufacturer",
+            };
+          });
           setManufacturerMatches(fallback.sort((a, b) => b.matchScore - a.matchScore));
         }
       }
@@ -149,28 +237,34 @@ export default function AIMatching() {
               });
               setInfluencerMatches(results.sort((a, b) => b.matchScore - a.matchScore));
             } catch {
-              const fallback = influencers.map(i => ({
-                candidateId: i.id,
-                candidateName: i.name,
-                matchScore: Math.floor(55 + Math.random() * 40),
-                explanation: `Active on ${i.primaryPlatform}. Niche: ${i.niche}.`,
-                categories: [i.primaryPlatform],
-                location: i.location,
-                role: "Influencer",
-              }));
+              const fallback = influencers.map(i => {
+                const { score, explanation } = scoreInfluencer(brandContext, i);
+                return {
+                  candidateId: i.id,
+                  candidateName: i.name,
+                  matchScore: score,
+                  explanation,
+                  categories: [i.primaryPlatform],
+                  location: i.location,
+                  role: "Influencer",
+                };
+              });
               setInfluencerMatches(fallback.sort((a, b) => b.matchScore - a.matchScore));
             }
           }
         } catch {
-          const fallback = influencers.map(i => ({
-            candidateId: i.id,
-            candidateName: i.name,
-            matchScore: Math.floor(55 + Math.random() * 40),
-            explanation: `Active on ${i.primaryPlatform}. Niche: ${i.niche}.`,
-            categories: [i.primaryPlatform],
-            location: i.location,
-            role: "Influencer",
-          }));
+          const fallback = influencers.map(i => {
+            const { score, explanation } = scoreInfluencer(brandContext, i);
+            return {
+              candidateId: i.id,
+              candidateName: i.name,
+              matchScore: score,
+              explanation,
+              categories: [i.primaryPlatform],
+              location: i.location,
+              role: "Influencer",
+            };
+          });
           setInfluencerMatches(fallback.sort((a, b) => b.matchScore - a.matchScore));
         }
       }

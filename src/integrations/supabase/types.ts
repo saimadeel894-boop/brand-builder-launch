@@ -20,24 +20,42 @@ export type Database = {
           created_at: string
           id: string
           industry: string
+          ingredient_preferences: string | null
+          location: string | null
+          pricing_positioning: string | null
+          product_category: string | null
+          target_market: string | null
           updated_at: string
           user_id: string
+          website: string | null
         }
         Insert: {
           brand_name: string
           created_at?: string
           id?: string
           industry: string
+          ingredient_preferences?: string | null
+          location?: string | null
+          pricing_positioning?: string | null
+          product_category?: string | null
+          target_market?: string | null
           updated_at?: string
           user_id: string
+          website?: string | null
         }
         Update: {
           brand_name?: string
           created_at?: string
           id?: string
           industry?: string
+          ingredient_preferences?: string | null
+          location?: string | null
+          pricing_positioning?: string | null
+          product_category?: string | null
+          target_market?: string | null
           updated_at?: string
           user_id?: string
+          website?: string | null
         }
         Relationships: [
           {
@@ -49,27 +67,95 @@ export type Database = {
           },
         ]
       }
+      campaign_performance: {
+        Row: {
+          campaign_id: string
+          clicks: number | null
+          conversions: number | null
+          created_at: string
+          engagement_rate: number | null
+          id: string
+          impressions: number | null
+          influencer_id: string
+          revenue: number | null
+          spend: number | null
+          updated_at: string
+        }
+        Insert: {
+          campaign_id: string
+          clicks?: number | null
+          conversions?: number | null
+          created_at?: string
+          engagement_rate?: number | null
+          id?: string
+          impressions?: number | null
+          influencer_id: string
+          revenue?: number | null
+          spend?: number | null
+          updated_at?: string
+        }
+        Update: {
+          campaign_id?: string
+          clicks?: number | null
+          conversions?: number | null
+          created_at?: string
+          engagement_rate?: number | null
+          id?: string
+          impressions?: number | null
+          influencer_id?: string
+          revenue?: number | null
+          spend?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_performance_influencer_id_fkey"
+            columns: ["influencer_id"]
+            isOneToOne: false
+            referencedRelation: "influencer_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       influencer_profiles: {
         Row: {
+          audience_geography: Json | null
           created_at: string
+          engagement_rate: number | null
+          follower_count: number | null
+          follower_demographics: Json | null
           id: string
+          location: string | null
           name: string
+          niche: string | null
           primary_platform: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          audience_geography?: Json | null
           created_at?: string
+          engagement_rate?: number | null
+          follower_count?: number | null
+          follower_demographics?: Json | null
           id?: string
+          location?: string | null
           name: string
+          niche?: string | null
           primary_platform: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          audience_geography?: Json | null
           created_at?: string
+          engagement_rate?: number | null
+          follower_count?: number | null
+          follower_demographics?: Json | null
           id?: string
+          location?: string | null
           name?: string
+          niche?: string | null
           primary_platform?: string
           updated_at?: string
           user_id?: string
@@ -91,6 +177,7 @@ export type Database = {
           company_name: string
           created_at: string
           description: string | null
+          formulation_expertise: string[] | null
           id: string
           lead_time: string | null
           location: string | null
@@ -105,6 +192,7 @@ export type Database = {
           company_name: string
           created_at?: string
           description?: string | null
+          formulation_expertise?: string[] | null
           id?: string
           lead_time?: string | null
           location?: string | null
@@ -119,6 +207,7 @@ export type Database = {
           company_name?: string
           created_at?: string
           description?: string | null
+          formulation_expertise?: string[] | null
           id?: string
           lead_time?: string | null
           location?: string | null

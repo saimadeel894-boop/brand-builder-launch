@@ -147,6 +147,100 @@ export type Database = {
           },
         ]
       }
+      conversion_metrics: {
+        Row: {
+          affiliate_traffic: number
+          campaign_id: string
+          clicks: number
+          conversions: number
+          created_at: string
+          id: string
+          influencer_id: string
+          promo_code_usage: number
+          recorded_at: string
+          revenue: number
+        }
+        Insert: {
+          affiliate_traffic?: number
+          campaign_id: string
+          clicks?: number
+          conversions?: number
+          created_at?: string
+          id?: string
+          influencer_id: string
+          promo_code_usage?: number
+          recorded_at?: string
+          revenue?: number
+        }
+        Update: {
+          affiliate_traffic?: number
+          campaign_id?: string
+          clicks?: number
+          conversions?: number
+          created_at?: string
+          id?: string
+          influencer_id?: string
+          promo_code_usage?: number
+          recorded_at?: string
+          revenue?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversion_metrics_influencer_id_fkey"
+            columns: ["influencer_id"]
+            isOneToOne: false
+            referencedRelation: "influencer_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      engagement_metrics: {
+        Row: {
+          campaign_id: string
+          comments: number
+          created_at: string
+          id: string
+          influencer_id: string
+          likes: number
+          post_url: string | null
+          recorded_at: string
+          shares: number
+          views: number
+        }
+        Insert: {
+          campaign_id: string
+          comments?: number
+          created_at?: string
+          id?: string
+          influencer_id: string
+          likes?: number
+          post_url?: string | null
+          recorded_at?: string
+          shares?: number
+          views?: number
+        }
+        Update: {
+          campaign_id?: string
+          comments?: number
+          created_at?: string
+          id?: string
+          influencer_id?: string
+          likes?: number
+          post_url?: string | null
+          recorded_at?: string
+          shares?: number
+          views?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "engagement_metrics_influencer_id_fkey"
+            columns: ["influencer_id"]
+            isOneToOne: false
+            referencedRelation: "influencer_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       influencer_profiles: {
         Row: {
           audience_geography: Json | null

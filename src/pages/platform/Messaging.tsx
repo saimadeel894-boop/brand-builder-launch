@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useFirebaseAuth } from "@/contexts/FirebaseAuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { TranslateButton } from "@/components/TranslateButton";
 import {
   MessageSquare, Search, Send, Paperclip, Circle, FileText, ImageIcon, Download, Plus, X, Loader2,
 } from "lucide-react";

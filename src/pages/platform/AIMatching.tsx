@@ -57,8 +57,9 @@ function scoreManufacturer(brand: any, mfg: any): { score: number; explanation: 
   // MOQ compatibility (15%)
   const moqScore = mfg.moq ? 70 : 50; // Basic: has MOQ info = better
 
-  // Capacity signal (10%) - based on having description/lead time
-  const capScore = (mfg.description ? 50 : 20) + (mfg.leadTime ? 30 : 0) + (mfg.categories?.length > 2 ? 20 : 0);
+  // Capacity & expertise signal (10%) - includes formulation_expertise
+  const expertiseBonus = (mfg.formulationExpertise?.length || 0) > 0 ? 30 : 0;
+  const capScore = (mfg.description ? 40 : 20) + (mfg.leadTime ? 20 : 0) + expertiseBonus + (mfg.categories?.length > 2 ? 10 : 0);
 
   const weighted = catScore * 0.3 + certScore * 0.25 + locScore * 0.2 + moqScore * 0.15 + Math.min(100, capScore) * 0.1;
   const final = Math.round(Math.min(100, Math.max(0, weighted)));

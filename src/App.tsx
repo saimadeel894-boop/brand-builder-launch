@@ -54,7 +54,7 @@ import PaymentsWallets from "./pages/platform/PaymentsWallets";
 import EscrowPayment from "./pages/platform/EscrowPayment";
 import ContractGeneration from "./pages/platform/ContractGeneration";
 import DisputeResolution from "./pages/platform/DisputeResolution";
-
+import AdminDashboard from "./pages/platform/AdminDashboard";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -116,6 +116,7 @@ const App = () => (
             <Route path="/escrow" element={<ProtectedRoute requireRole requireProfile><EscrowPayment /></ProtectedRoute>} />
             <Route path="/contracts" element={<ProtectedRoute requireRole requireProfile><ContractGeneration /></ProtectedRoute>} />
             <Route path="/disputes" element={<ProtectedRoute requireRole requireProfile><DisputeResolution /></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute requireRole requireProfile><AdminDashboard /></ProtectedRoute>} />
 
             {/* Catch-all */}
             <Route path="*" element={<NotFound />} />

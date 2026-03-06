@@ -43,6 +43,7 @@ import CampaignManager from "./pages/platform/CampaignManager";
 import MarketIntelligence from "./pages/platform/MarketIntelligence";
 import IngredientDatabase from "./pages/platform/IngredientDatabase";
 import Analytics from "./pages/platform/Analytics";
+import CampaignAnalytics from "./pages/platform/CampaignAnalytics";
 import RegulatoryCompliance from "./pages/platform/RegulatoryCompliance";
 import RfqManagement from "./pages/platform/RfqManagement";
 import SampleManagement from "./pages/platform/SampleManagement";

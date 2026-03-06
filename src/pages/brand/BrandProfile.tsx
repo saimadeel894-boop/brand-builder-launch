@@ -174,7 +174,14 @@ export default function BrandProfile() {
               </div>
               <div className="space-y-2"><Label>Website</Label><Input value={formData.website || ""} onChange={(e) => setFormData({ ...formData, website: e.target.value })} placeholder="https://" /></div>
               <div className="space-y-2"><Label>Brand Story</Label><Textarea value={formData.brandStory || ""} onChange={(e) => setFormData({ ...formData, brandStory: e.target.value })} placeholder="Tell the story of your brand..." rows={4} /></div>
-              <div className="space-y-2"><Label>Target Market</Label><Input value={formData.targetMarket || ""} onChange={(e) => setFormData({ ...formData, targetMarket: e.target.value })} placeholder="e.g., Women 25-45, luxury segment" /></div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2"><Label>Product Category</Label><Input value={formData.productCategory || ""} onChange={(e) => setFormData({ ...formData, productCategory: e.target.value })} placeholder="e.g., Skincare, Haircare" /></div>
+                <div className="space-y-2"><Label>Target Market</Label><Input value={formData.targetMarket || ""} onChange={(e) => setFormData({ ...formData, targetMarket: e.target.value })} placeholder="e.g., Women 25-45, luxury segment" /></div>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2"><Label>Ingredient Preferences</Label><Input value={formData.ingredientPreferences || ""} onChange={(e) => setFormData({ ...formData, ingredientPreferences: e.target.value })} placeholder="e.g., Vegan, Organic, Paraben-free" /></div>
+                <div className="space-y-2"><Label>Pricing Positioning</Label><Input value={formData.pricingPositioning || ""} onChange={(e) => setFormData({ ...formData, pricingPositioning: e.target.value })} placeholder="e.g., Premium, Mid-range, Mass market" /></div>
+              </div>
               <div className="space-y-2"><Label>Annual Volume</Label><Input value={formData.annualVolume || ""} onChange={(e) => setFormData({ ...formData, annualVolume: e.target.value })} placeholder="e.g., 100,000+ units" /></div>
             </CardContent>
           </Card>

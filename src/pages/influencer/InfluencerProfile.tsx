@@ -152,8 +152,12 @@ export default function InfluencerProfile() {
               </div>
               <div className="space-y-2"><Label>Bio</Label><Textarea value={formData.bio || ""} onChange={(e) => setFormData({ ...formData, bio: e.target.value })} placeholder="Tell brands about yourself..." rows={4} /></div>
               <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2"><Label>Audience Size</Label><Input value={formData.audienceSize || ""} onChange={(e) => setFormData({ ...formData, audienceSize: e.target.value })} placeholder="e.g., 150K" /></div>
-                <div className="space-y-2"><Label>Engagement Rate</Label><Input value={formData.engagementRate || ""} onChange={(e) => setFormData({ ...formData, engagementRate: e.target.value })} placeholder="e.g., 4.5%" /></div>
+                <div className="space-y-2"><Label>Follower Count</Label><Input type="number" value={formData.followerCount || ""} onChange={(e) => setFormData({ ...formData, followerCount: parseInt(e.target.value) || 0 })} placeholder="e.g., 150000" /></div>
+                <div className="space-y-2"><Label>Engagement Rate (%)</Label><Input type="number" step="0.01" value={formData.engagementRateNumeric || ""} onChange={(e) => setFormData({ ...formData, engagementRateNumeric: parseFloat(e.target.value) || 0 })} placeholder="e.g., 4.5" /></div>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2"><Label>Audience Size (Display)</Label><Input value={formData.audienceSize || ""} onChange={(e) => setFormData({ ...formData, audienceSize: e.target.value })} placeholder="e.g., 150K" /></div>
+                <div className="space-y-2"><Label>Engagement Rate (Display)</Label><Input value={formData.engagementRate || ""} onChange={(e) => setFormData({ ...formData, engagementRate: e.target.value })} placeholder="e.g., 4.5%" /></div>
               </div>
               <div className="space-y-2"><Label>Audience Demographics</Label><Input value={formData.audienceDemographics || ""} onChange={(e) => setFormData({ ...formData, audienceDemographics: e.target.value })} placeholder="e.g., Women 18-34, 70% US-based" /></div>
               <div className="space-y-2"><Label>Website</Label><Input value={formData.website || ""} onChange={(e) => setFormData({ ...formData, website: e.target.value })} placeholder="https://" /></div>

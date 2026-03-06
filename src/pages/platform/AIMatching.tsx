@@ -158,6 +158,8 @@ export default function AIMatching() {
         moq: d.data().moq,
         location: d.data().location,
         description: d.data().description,
+        formulationExpertise: d.data().formulationExpertise || d.data().formulation_expertise || [],
+        leadTime: d.data().leadTime || d.data().lead_time,
       }));
 
       // Fetch influencers with expanded metrics

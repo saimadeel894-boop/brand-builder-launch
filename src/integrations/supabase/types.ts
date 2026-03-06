@@ -295,6 +295,48 @@ export type Database = {
         }
         Relationships: []
       }
+      formulation_analyses: {
+        Row: {
+          compliance_results: Json | null
+          created_at: string
+          formulation_text: string
+          id: string
+          overall_status: string
+          parsed_ingredients: Json | null
+          product_name: string
+          suggestions: Json | null
+          target_markets: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          compliance_results?: Json | null
+          created_at?: string
+          formulation_text: string
+          id?: string
+          overall_status?: string
+          parsed_ingredients?: Json | null
+          product_name?: string
+          suggestions?: Json | null
+          target_markets?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          compliance_results?: Json | null
+          created_at?: string
+          formulation_text?: string
+          id?: string
+          overall_status?: string
+          parsed_ingredients?: Json | null
+          product_name?: string
+          suggestions?: Json | null
+          target_markets?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       influencer_profiles: {
         Row: {
           audience_geography: Json | null
@@ -347,6 +389,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ingredients: {
+        Row: {
+          alternatives: string[] | null
+          cas_number: string | null
+          category: string
+          created_at: string
+          description: string | null
+          ewg_score: number | null
+          functions: string[]
+          id: string
+          inci_name: string
+          max_concentration: Json | null
+          name: string
+          origin: string | null
+          regulatory_status: Json | null
+          restrictions: string[] | null
+          safety_rating: string
+          updated_at: string
+        }
+        Insert: {
+          alternatives?: string[] | null
+          cas_number?: string | null
+          category?: string
+          created_at?: string
+          description?: string | null
+          ewg_score?: number | null
+          functions?: string[]
+          id?: string
+          inci_name: string
+          max_concentration?: Json | null
+          name: string
+          origin?: string | null
+          regulatory_status?: Json | null
+          restrictions?: string[] | null
+          safety_rating?: string
+          updated_at?: string
+        }
+        Update: {
+          alternatives?: string[] | null
+          cas_number?: string | null
+          category?: string
+          created_at?: string
+          description?: string | null
+          ewg_score?: number | null
+          functions?: string[]
+          id?: string
+          inci_name?: string
+          max_concentration?: Json | null
+          name?: string
+          origin?: string | null
+          regulatory_status?: Json | null
+          restrictions?: string[] | null
+          safety_rating?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       manufacturer_profiles: {
         Row: {

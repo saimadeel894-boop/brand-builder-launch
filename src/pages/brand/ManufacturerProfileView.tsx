@@ -106,7 +106,10 @@ export default function ManufacturerProfileView() {
           </div>
 
           {profile.description && (
-            <p className="mt-6 text-muted-foreground">{profile.description}</p>
+            <div className="mt-6">
+              <p className="text-muted-foreground">{profile.description}</p>
+              <TranslateButton text={profile.description} context="product_specification" />
+            </div>
           )}
 
           {/* Key Metrics */}

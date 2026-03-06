@@ -28,10 +28,16 @@ function scoreManufacturer(brand: any, mfg: any): { score: number; explanation: 
   const brandLocation: string = (brand?.location || "").toLowerCase();
   const brandMoq: string = brand?.moq || brand?.annualVolume || "";
 
-  // Category overlap (30%)
+  const brandProductCat = (brand?.productCategory || "").toLowerCase();
+
+  // Category overlap (30%) - also consider brand's product_category
   const mfgCats: string[] = mfg.categories || [];
-  const catOverlap = brandCategories.length > 0
-    ? mfgCats.filter((c: string) => brandCategories.some((bc: string) => bc.toLowerCase() === c.toLowerCase())).length / Math.max(brandCategories.length, 1)
+  const allBrandCats = [...brandCategories];
+  if (brandProductCat && !allBrandCats.some(c => c.toLowerCase() === brandProductCat)) {
+    allBrandCats.push(brandProductCat);
+  }
+  const catOverlap = allBrandCats.length > 0
+    ? mfgCats.filter((c: string) => allBrandCats.some((bc: string) => bc.toLowerCase() === c.toLowerCase())).length / Math.max(allBrandCats.length, 1)
     : mfgCats.length > 0 ? 0.5 : 0.3;
   const catScore = Math.min(1, catOverlap) * 100;
 

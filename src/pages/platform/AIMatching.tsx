@@ -82,7 +82,7 @@ export default function AIMatching() {
         // Fallback: use generic context from profile
         brandContext = {
           id: user.uid,
-          brandName: profile.firstName || "Brand",
+          brandName: profile.email?.split("@")[0] || "Brand",
           industry: "beauty",
           productCategory: "skincare",
           targetMarket: "Global",

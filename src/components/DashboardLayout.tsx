@@ -101,10 +101,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   };
 
-  const navigation = getNavigation().filter(item => {
-    if (item.href === "/admin" && !isAdmin) return false;
-    return true;
-  });
+  const navigation = getNavigation();
   const RoleIcon = getRoleIcon();
 
   return (

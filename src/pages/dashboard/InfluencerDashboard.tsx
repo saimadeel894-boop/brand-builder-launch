@@ -182,12 +182,6 @@ export default function InfluencerDashboard() {
               <Button variant="outline" className="w-full justify-start" onClick={() => navigate("/influencer/applications")}>
                 <FileCheck className="mr-3 h-4 w-4 text-primary" />My Applications
               </Button>
-              <Button variant="outline" className="w-full justify-start" onClick={() => navigate("/analytics")}>
-                <BarChart3 className="mr-3 h-4 w-4 text-primary" />Analytics
-              </Button>
-              <Button variant="outline" className="w-full justify-start" onClick={() => navigate("/campaign-tracking")}>
-                <Target className="mr-3 h-4 w-4 text-primary" />Campaigns
-              </Button>
             </div>
           </div>
         </div>

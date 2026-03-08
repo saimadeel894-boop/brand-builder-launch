@@ -158,12 +158,6 @@ export default function BrandDashboard() {
               <Button variant="outline" className="w-full justify-start" onClick={() => navigate("/brand/campaigns/create")}>
                 <Megaphone className="mr-3 h-4 w-4 text-primary" />Create Campaign
               </Button>
-              <Button variant="outline" className="w-full justify-start" onClick={() => navigate("/campaign-tracking")}>
-                <BarChart3 className="mr-3 h-4 w-4 text-primary" />Campaign Tracking
-              </Button>
-              <Button variant="outline" className="w-full justify-start" onClick={() => navigate("/campaign-manager")}>
-                <Settings2 className="mr-3 h-4 w-4 text-primary" />Campaign Manager
-              </Button>
               <Button variant="outline" className="w-full justify-start" onClick={() => navigate("/brand/applications")}>
                 <Users className="mr-3 h-4 w-4 text-primary" />View Applications
               </Button>

@@ -1,6 +1,7 @@
 import { ReactNode, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useFirebaseAuth } from "@/contexts/FirebaseAuthContext";
+import { useAdminCheck } from "@/hooks/useAdmin";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
 import { cn } from "@/lib/utils";
@@ -47,6 +48,7 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { profile, signOut } = useFirebaseAuth();
+  const { isAdmin } = useAdminCheck();
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -139,7 +141,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   };
 
-  const navigation = getNavigation();
+  const navigation = getNavigation().filter(item => {
+    if (item.href === "/admin" && !isAdmin) return false;
+    return true;
+  });
   const RoleIcon = getRoleIcon();
 
   return (

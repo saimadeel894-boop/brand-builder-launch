@@ -8,7 +8,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import {
   Megaphone, Package, FileCheck, ArrowRight, CheckCircle, Mail,
-  Loader2, User, BarChart3, Target, XCircle,
+  Loader2, User, XCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -181,12 +181,6 @@ export default function InfluencerDashboard() {
               </Button>
               <Button variant="outline" className="w-full justify-start" onClick={() => navigate("/influencer/applications")}>
                 <FileCheck className="mr-3 h-4 w-4 text-primary" />My Applications
-              </Button>
-              <Button variant="outline" className="w-full justify-start" onClick={() => navigate("/analytics")}>
-                <BarChart3 className="mr-3 h-4 w-4 text-primary" />Analytics
-              </Button>
-              <Button variant="outline" className="w-full justify-start" onClick={() => navigate("/campaign-tracking")}>
-                <Target className="mr-3 h-4 w-4 text-primary" />Campaigns
               </Button>
             </div>
           </div>

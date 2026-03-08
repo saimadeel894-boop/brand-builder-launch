@@ -7,8 +7,8 @@ import { db } from "@/lib/firebase";
 import { useBrandRfqs } from "@/hooks/useBrandRfqs";
 import { RfqStatusBadge } from "@/components/brand/RfqStatusBadge";
 import {
-  Building2, FileText, Factory, Plus, ArrowRight, Search, Target, Users,
-  BarChart3, Megaphone, Settings2,
+  Building2, FileText, Factory, Plus, ArrowRight, Search, Users,
+  Megaphone,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -157,12 +157,6 @@ export default function BrandDashboard() {
               </Button>
               <Button variant="outline" className="w-full justify-start" onClick={() => navigate("/brand/campaigns/create")}>
                 <Megaphone className="mr-3 h-4 w-4 text-primary" />Create Campaign
-              </Button>
-              <Button variant="outline" className="w-full justify-start" onClick={() => navigate("/campaign-tracking")}>
-                <BarChart3 className="mr-3 h-4 w-4 text-primary" />Campaign Tracking
-              </Button>
-              <Button variant="outline" className="w-full justify-start" onClick={() => navigate("/campaign-manager")}>
-                <Settings2 className="mr-3 h-4 w-4 text-primary" />Campaign Manager
               </Button>
               <Button variant="outline" className="w-full justify-start" onClick={() => navigate("/brand/applications")}>
                 <Users className="mr-3 h-4 w-4 text-primary" />View Applications

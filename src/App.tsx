@@ -34,27 +34,10 @@ import InfluencerMarketplace from "./pages/influencer/InfluencerMarketplace";
 import InfluencerApplications from "./pages/influencer/InfluencerApplications";
 import InfluencerProfile from "./pages/influencer/InfluencerProfile";
 
-// Platform Pages
-import AIMatching from "./pages/platform/AIMatching";
+// Platform Pages (Phase 1 only)
 import Messaging from "./pages/platform/Messaging";
 import PlatformSettings from "./pages/platform/Settings";
-import CampaignTracking from "./pages/platform/CampaignTracking";
-import CampaignManager from "./pages/platform/CampaignManager";
-import MarketIntelligence from "./pages/platform/MarketIntelligence";
-import IngredientDatabase from "./pages/platform/IngredientDatabase";
-import Analytics from "./pages/platform/Analytics";
-import CampaignAnalytics from "./pages/platform/CampaignAnalytics";
-import RegulatoryCompliance from "./pages/platform/RegulatoryCompliance";
-import RfqManagement from "./pages/platform/RfqManagement";
-import SampleManagement from "./pages/platform/SampleManagement";
-import InfluencerDiscovery from "./pages/platform/InfluencerDiscovery";
-import UserProfileManagement from "./pages/platform/UserProfileManagement";
-import InvoicingPayments from "./pages/platform/InvoicingPayments";
-import PaymentsWallets from "./pages/platform/PaymentsWallets";
-import EscrowPayment from "./pages/platform/EscrowPayment";
-import ContractGeneration from "./pages/platform/ContractGeneration";
-import DisputeResolution from "./pages/platform/DisputeResolution";
-import AdminDashboard from "./pages/platform/AdminDashboard";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -96,27 +79,9 @@ const App = () => (
             <Route path="/influencer/marketplace" element={<ProtectedRoute requireRole requireProfile><InfluencerMarketplace /></ProtectedRoute>} />
             <Route path="/influencer/applications" element={<ProtectedRoute requireRole requireProfile><InfluencerApplications /></ProtectedRoute>} />
 
-            {/* Platform-wide routes */}
+            {/* Platform-wide routes (Phase 1) */}
             <Route path="/messages" element={<ProtectedRoute requireRole requireProfile><Messaging /></ProtectedRoute>} />
-            <Route path="/analytics" element={<ProtectedRoute requireRole requireProfile><Analytics /></ProtectedRoute>} />
-            <Route path="/campaign-analytics" element={<ProtectedRoute requireRole requireProfile><CampaignAnalytics /></ProtectedRoute>} />
-            <Route path="/ai-matching" element={<ProtectedRoute requireRole requireProfile><AIMatching /></ProtectedRoute>} />
-            <Route path="/market-intelligence" element={<ProtectedRoute requireRole requireProfile><MarketIntelligence /></ProtectedRoute>} />
-            <Route path="/ingredients" element={<ProtectedRoute requireRole requireProfile><IngredientDatabase /></ProtectedRoute>} />
-            <Route path="/campaign-tracking" element={<ProtectedRoute requireRole requireProfile><CampaignTracking /></ProtectedRoute>} />
-            <Route path="/campaign-manager" element={<ProtectedRoute requireRole requireProfile><CampaignManager /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute requireRole requireProfile><PlatformSettings /></ProtectedRoute>} />
-            <Route path="/compliance" element={<ProtectedRoute requireRole requireProfile><RegulatoryCompliance /></ProtectedRoute>} />
-            <Route path="/rfq-management" element={<ProtectedRoute requireRole requireProfile><RfqManagement /></ProtectedRoute>} />
-            <Route path="/sample-management" element={<ProtectedRoute requireRole requireProfile><SampleManagement /></ProtectedRoute>} />
-            <Route path="/influencer-discovery" element={<ProtectedRoute requireRole requireProfile><InfluencerDiscovery /></ProtectedRoute>} />
-            <Route path="/profile-management" element={<ProtectedRoute requireRole requireProfile><UserProfileManagement /></ProtectedRoute>} />
-            <Route path="/invoicing" element={<ProtectedRoute requireRole requireProfile><InvoicingPayments /></ProtectedRoute>} />
-            <Route path="/payments-wallets" element={<ProtectedRoute requireRole requireProfile><PaymentsWallets /></ProtectedRoute>} />
-            <Route path="/escrow" element={<ProtectedRoute requireRole requireProfile><EscrowPayment /></ProtectedRoute>} />
-            <Route path="/contracts" element={<ProtectedRoute requireRole requireProfile><ContractGeneration /></ProtectedRoute>} />
-            <Route path="/disputes" element={<ProtectedRoute requireRole requireProfile><DisputeResolution /></ProtectedRoute>} />
-            <Route path="/admin" element={<ProtectedRoute requireRole requireProfile><AdminDashboard /></ProtectedRoute>} />
 
             {/* Catch-all */}
             <Route path="*" element={<NotFound />} />

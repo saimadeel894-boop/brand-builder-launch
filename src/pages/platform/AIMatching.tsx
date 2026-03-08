@@ -6,8 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Sparkles, Zap, Target, TrendingUp, Brain, Beaker, Loader2 } from "lucide-react";
 import { useFirebaseAuth } from "@/contexts/FirebaseAuthContext";
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -35,42 +33,61 @@ export default function AIMatching() {
     setLoading(true);
 
     try {
-      // Fetch brand profile
-      let brandContext: any = {};
-      if (profile.role === "brand") {
-        const brandSnap = await getDocs(collection(db, "brandProfiles"));
-        brandSnap.forEach(d => {
-          if (d.id === user.uid) brandContext = { ...d.data(), id: d.id };
-        });
+      // Fetch all candidates from Supabase via edge function (uses service role)
+      const { data: dbData, error: fetchErr } = await supabase.functions.invoke("ai-match", {
+        body: { type: "fetch-candidates" },
+      });
+      if (fetchErr) throw fetchErr;
+
+      const manufacturers = (dbData?.manufacturers || []).map((m: any) => ({
+        id: m.id,
+        companyName: m.company_name,
+        categories: m.categories || [],
+        certifications: m.certifications || [],
+        moq: m.moq,
+        location: m.location,
+        description: m.description,
+        formulationExpertise: m.formulation_expertise || [],
+        leadTime: m.lead_time,
+      }));
+
+      const influencers = (dbData?.influencers || []).map((i: any) => ({
+        id: i.id,
+        name: i.name,
+        primaryPlatform: i.primary_platform,
+        niche: i.niche || "General",
+        location: i.location || "Unknown",
+        followerCount: i.follower_count || 0,
+        engagementRate: i.engagement_rate || 0,
+        audienceGeography: i.audience_geography || {},
+        followerDemographics: i.follower_demographics || {},
+      }));
+
+      // Build brand context from the current user's brand profile or use profile data
+      let brandContext: any = { id: user.uid };
+      const brandProfiles = dbData?.brands || [];
+      const myBrand = brandProfiles.find((b: any) => b.user_id === user.uid);
+      if (myBrand) {
+        brandContext = {
+          id: myBrand.id,
+          brandName: myBrand.brand_name,
+          industry: myBrand.industry,
+          productCategory: myBrand.product_category,
+          targetMarket: myBrand.target_market,
+          ingredientPreferences: myBrand.ingredient_preferences,
+          pricingPositioning: myBrand.pricing_positioning,
+          location: myBrand.location,
+        };
+      } else {
+        // Fallback: use generic context from profile
+        brandContext = {
+          id: user.uid,
+          brandName: profile.email?.split("@")[0] || "Brand",
+          industry: "beauty",
+          productCategory: "skincare",
+          targetMarket: "Global",
+        };
       }
-
-      // Fetch manufacturers
-      const mfgSnap = await getDocs(collection(db, "manufacturerProfiles"));
-      const manufacturers = mfgSnap.docs.map(d => ({
-        id: d.id,
-        companyName: d.data().companyName,
-        categories: d.data().categories || [],
-        certifications: d.data().certifications || [],
-        moq: d.data().moq,
-        location: d.data().location,
-        description: d.data().description,
-        formulationExpertise: d.data().formulationExpertise || d.data().formulation_expertise || [],
-        leadTime: d.data().leadTime || d.data().lead_time,
-      }));
-
-      // Fetch influencers
-      const infSnap = await getDocs(collection(db, "influencerProfiles"));
-      const influencers = infSnap.docs.map(d => ({
-        id: d.id,
-        name: d.data().name,
-        primaryPlatform: d.data().primaryPlatform,
-        niche: d.data().niche || "General",
-        location: d.data().location || "Unknown",
-        followerCount: d.data().followerCount || d.data().follower_count || 0,
-        engagementRate: d.data().engagementRate || d.data().engagement_rate || 0,
-        audienceGeography: d.data().audienceGeography || d.data().audience_geography || {},
-        followerDemographics: d.data().followerDemographics || d.data().follower_demographics || {},
-      }));
 
       // Match manufacturers
       if (manufacturers.length > 0) {
@@ -81,7 +98,7 @@ export default function AIMatching() {
           if (!error && data?.result) {
             const parsed = JSON.parse(data.result);
             const results: MatchResult[] = parsed.map((p: any) => {
-              const mfg = manufacturers.find(m => m.id === p.candidateId);
+              const mfg = manufacturers.find((m: any) => m.id === p.candidateId);
               return {
                 candidateId: p.candidateId,
                 candidateName: mfg?.companyName || p.candidateId,
@@ -109,7 +126,7 @@ export default function AIMatching() {
           if (!error && data?.result) {
             const parsed = JSON.parse(data.result);
             const results: MatchResult[] = parsed.map((p: any) => {
-              const inf = influencers.find(i => i.id === p.candidateId);
+              const inf = influencers.find((i: any) => i.id === p.candidateId);
               return {
                 candidateId: p.candidateId,
                 candidateName: inf?.name || p.candidateId,
@@ -128,7 +145,7 @@ export default function AIMatching() {
       }
 
       setLastRun(new Date());
-      toast({ title: "Analysis Complete", description: "AI matching results updated and persisted." });
+      toast({ title: "Analysis Complete", description: `Found ${manufacturers.length} manufacturers and ${influencers.length} influencers. Results scored and persisted.` });
     } catch (err) {
       console.error("Matching error:", err);
       toast({ title: "Error", description: "Failed to run matching analysis", variant: "destructive" });

@@ -30,7 +30,6 @@ function scoreManufacturerDeterministic(brand: any, mfg: any): ScoringResult {
   const mfgLoc = (mfg.location || "").toLowerCase();
   const mfgExpertise = (mfg.formulationExpertise || mfg.formulation_expertise || []).map((e: string) => e.toLowerCase());
 
-  // 1. Formulation compatibility (30%)
   let formulationScore = 0;
   const catOverlap = brandCats.length > 0
     ? mfgCats.filter((c: string) => brandCats.some((bc: string) => bc.includes(c) || c.includes(bc))).length / brandCats.length
@@ -40,24 +39,18 @@ function scoreManufacturerDeterministic(brand: any, mfg: any): ScoringResult {
     : mfgExpertise.length > 0 ? 0.2 : 0;
   formulationScore = Math.min(100, (formulationScore + catOverlap * 70 + expertiseBonus * 100));
 
-  // 2. MOQ compatibility (20%)
   const moqScore = mfg.moq ? 70 : 40;
 
-  // 3. Certification match (15%)
   const certOverlap = brandCerts.length > 0
     ? mfgCerts.filter((c: string) => brandCerts.some((bc: string) => bc === c)).length / brandCerts.length
     : mfgCerts.length > 0 ? 0.5 : 0.2;
   const certScore = Math.min(100, certOverlap * 100);
 
-  // 4. Location proximity (10%)
   const locScore = brandLoc && mfgLoc
     ? (mfgLoc.includes(brandLoc) || brandLoc.includes(mfgLoc) ? 90 : 40)
     : 50;
 
-  // 5. Lead time compatibility (10%)
   const leadTimeScore = mfg.leadTime || mfg.lead_time ? 70 : 40;
-
-  // 6. Historical performance (15%) — placeholder until campaign data available
   const histScore = 50;
 
   const weighted = formulationScore * 0.30 + moqScore * 0.20 + certScore * 0.15 + locScore * 0.10 + leadTimeScore * 0.10 + histScore * 0.15;
@@ -84,12 +77,10 @@ function scoreInfluencerDeterministic(brand: any, inf: any): ScoringResult {
   const followers = inf.followerCount || inf.follower_count || 0;
   const platform = (inf.primaryPlatform || inf.primary_platform || "").toLowerCase();
 
-  // 1. Niche alignment (30%)
   const nicheScore = brandIndustry && niche
     ? (niche.includes(brandIndustry) || brandIndustry.includes(niche) ? 90 : 45)
     : niche ? 50 : 30;
 
-  // 2. Engagement rate (25%)
   let engScore: number;
   if (engRate > 0) {
     engScore = Math.min(100, engRate * 15);
@@ -99,15 +90,11 @@ function scoreInfluencerDeterministic(brand: any, inf: any): ScoringResult {
     engScore = 30;
   }
 
-  // 3. Location & audience geography (20%)
   const locScore = brandLoc && infLoc
     ? (infLoc.includes(brandLoc) || brandLoc.includes(infLoc) ? 90 : 40)
     : 50;
 
-  // 4. Platform match (15%)
   const platformScore = platform ? 60 : 30;
-
-  // 5. Historical performance (10%) — placeholder
   const histScore = 50;
 
   const weighted = nicheScore * 0.30 + engScore * 0.25 + locScore * 0.20 + platformScore * 0.15 + histScore * 0.10;
@@ -167,11 +154,35 @@ async function persistMatches(supabaseAdmin: any, brandId: string, results: Scor
   if (error) console.error("Failed to persist matches:", error.message);
 }
 
+async function fetchCandidatesFromDB(supabaseAdmin: any) {
+  const { data: manufacturers, error: mfgErr } = await supabaseAdmin
+    .from("manufacturer_profiles")
+    .select("id, company_name, categories, certifications, moq, lead_time, location, description, formulation_expertise");
+  if (mfgErr) console.error("Error fetching manufacturers:", mfgErr.message);
+
+  const { data: influencers, error: infErr } = await supabaseAdmin
+    .from("influencer_profiles")
+    .select("id, name, primary_platform, niche, location, follower_count, engagement_rate, audience_geography, follower_demographics");
+  if (infErr) console.error("Error fetching influencers:", infErr.message);
+
+  const { data: brands, error: brandErr } = await supabaseAdmin
+    .from("brand_profiles")
+    .select("id, user_id, brand_name, industry, product_category, target_market, ingredient_preferences, pricing_positioning, location");
+  if (brandErr) console.error("Error fetching brands:", brandErr.message);
+
+  return {
+    manufacturers: manufacturers || [],
+    influencers: influencers || [],
+    brands: brands || [],
+  };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { type, brandProfile, candidates } = await req.json();
+    const body = await req.json();
+    const { type, brandProfile, candidates: providedCandidates, fetchFromDB } = body;
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY is not configured");
 
@@ -181,10 +192,18 @@ serve(async (req) => {
 
     const brandId = brandProfile?.id || "";
 
+    // If fetchFromDB is true, fetch candidates from Supabase
+    let candidates = providedCandidates;
+    let dbData: any = null;
+    if (fetchFromDB) {
+      dbData = await fetchCandidatesFromDB(supabaseAdmin);
+    }
+
     let systemPrompt = "";
     let userPrompt = "";
 
     if (type === "manufacturer-match") {
+      const mfgCandidates = candidates || dbData?.manufacturers || [];
       systemPrompt = `You are a deterministic AI matching engine for a B2B beauty supply chain platform. Score each manufacturer using these EXACT weights:
 - Formulation Compatibility (30%): Category overlap between brand needs and manufacturer capabilities. Consider product_category, ingredient_preferences, and formulation_expertise.
 - MOQ Compatibility (20%): Does the manufacturer's MOQ align with the brand's volume expectations and pricing_positioning?
@@ -194,8 +213,10 @@ serve(async (req) => {
 - Historical Performance (15%): Based on available campaign/order history. If none, use neutral score of 50.
 
 Calculate weighted score 0-100. Be deterministic: same inputs must produce same outputs. Return JSON array sorted by matchScore descending.`;
-      userPrompt = `Brand profile: ${JSON.stringify(brandProfile)}\n\nManufacturer candidates:\n${JSON.stringify(candidates)}\n\nReturn ONLY valid JSON array (no markdown): [{ "candidateId": "...", "matchScore": number, "explanation": "1-2 sentences citing which criteria drove the score" }]`;
+      userPrompt = `Brand profile: ${JSON.stringify(brandProfile)}\n\nManufacturer candidates:\n${JSON.stringify(mfgCandidates)}\n\nReturn ONLY valid JSON array (no markdown): [{ "candidateId": "...", "matchScore": number, "explanation": "1-2 sentences citing which criteria drove the score" }]`;
+      candidates = mfgCandidates;
     } else if (type === "influencer-match") {
+      const infCandidates = candidates || dbData?.influencers || [];
       systemPrompt = `You are a deterministic AI matching engine for influencer marketing. Score each influencer using these EXACT weights:
 - Niche Alignment (30%): How well does the influencer's niche match the brand's industry/product_category?
 - Engagement Rate (25%): Use actual engagement_rate and follower_count. Higher genuine engagement = higher score.
@@ -204,7 +225,14 @@ Calculate weighted score 0-100. Be deterministic: same inputs must produce same 
 - Historical Performance (10%): Based on campaign_performance data if available. Otherwise neutral 50.
 
 Calculate weighted score 0-100. Be deterministic. Return JSON array sorted by matchScore descending.`;
-      userPrompt = `Brand campaign: ${JSON.stringify(brandProfile)}\n\nInfluencer candidates:\n${JSON.stringify(candidates)}\n\nReturn ONLY valid JSON array (no markdown): [{ "candidateId": "...", "matchScore": number, "explanation": "1-2 sentences citing which criteria drove the score" }]`;
+      userPrompt = `Brand campaign: ${JSON.stringify(brandProfile)}\n\nInfluencer candidates:\n${JSON.stringify(infCandidates)}\n\nReturn ONLY valid JSON array (no markdown): [{ "candidateId": "...", "matchScore": number, "explanation": "1-2 sentences citing which criteria drove the score" }]`;
+      candidates = infCandidates;
+    } else if (type === "fetch-candidates") {
+      // Just return the DB data for the frontend to use
+      const data = await fetchCandidatesFromDB(supabaseAdmin);
+      return new Response(JSON.stringify(data), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     } else if (type === "summary") {
       systemPrompt = `You are a professional business analyst. Generate concise summaries. Be factual and professional.`;
       userPrompt = candidates;
@@ -217,6 +245,12 @@ Calculate weighted score 0-100. Be deterministic. Return JSON array sorted by ma
     if (type === "manufacturer-match" || type === "influencer-match") {
       let results: ScoringResult[] = [];
       let usedAI = false;
+
+      if (!candidates || candidates.length === 0) {
+        return new Response(JSON.stringify({ result: "[]", method: "none", message: "No candidates found" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
 
       try {
         const response = await callOpenAI(OPENAI_API_KEY, systemPrompt, userPrompt);

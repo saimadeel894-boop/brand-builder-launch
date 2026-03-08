@@ -7,8 +7,8 @@ import { db } from "@/lib/firebase";
 import { useBrandRfqs } from "@/hooks/useBrandRfqs";
 import { RfqStatusBadge } from "@/components/brand/RfqStatusBadge";
 import {
-  Building2, FileText, Factory, Plus, ArrowRight, Search, Target, Users,
-  BarChart3, Megaphone, Settings2,
+  Building2, FileText, Factory, Plus, ArrowRight, Search, Users,
+  Megaphone,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

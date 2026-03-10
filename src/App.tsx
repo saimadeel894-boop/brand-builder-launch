@@ -56,6 +56,8 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
 
             {/* Protected onboarding routes */}
             <Route path="/select-role" element={<ProtectedRoute><SelectRole /></ProtectedRoute>} />

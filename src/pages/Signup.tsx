@@ -193,7 +193,26 @@ export default function Signup() {
               />
             </div>
 
-            <Button type="submit" className="w-full h-11" disabled={loading}>
+            <div className="flex items-start gap-2">
+              <Checkbox
+                id="terms"
+                checked={acceptedTerms}
+                onCheckedChange={(checked) => setAcceptedTerms(checked === true)}
+                className="mt-0.5"
+              />
+              <label htmlFor="terms" className="text-sm text-muted-foreground leading-tight">
+                I agree to the{" "}
+                <Link to="/terms" className="text-primary hover:underline" target="_blank">
+                  Terms of Service
+                </Link>{" "}
+                and{" "}
+                <Link to="/privacy" className="text-primary hover:underline" target="_blank">
+                  Privacy Policy
+                </Link>.
+              </label>
+            </div>
+
+            <Button type="submit" className="w-full h-11" disabled={loading || !acceptedTerms}>
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

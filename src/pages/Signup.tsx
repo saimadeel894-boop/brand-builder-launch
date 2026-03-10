@@ -9,6 +9,7 @@ import { Loader2, Eye, EyeOff } from "lucide-react";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
 import { PasswordStrength, validatePassword } from "@/components/ui/password-strength";
+import { Checkbox } from "@/components/ui/checkbox";
 
 // Strong password schema
 const passwordSchema = z.string()

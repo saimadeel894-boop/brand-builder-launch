@@ -22,6 +22,7 @@ import {
   Package,
   FileText,
   User,
+  Brain,
 } from "lucide-react";
 
 interface DashboardLayoutProps {

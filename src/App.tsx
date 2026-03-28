@@ -40,6 +40,7 @@ import InfluencerProfile from "./pages/influencer/InfluencerProfile";
 // Platform Pages (Phase 1 only)
 import Messaging from "./pages/platform/Messaging";
 import PlatformSettings from "./pages/platform/Settings";
+import AIMatching from "./pages/platform/AIMatching";
 
 const queryClient = new QueryClient();
 
@@ -88,6 +89,7 @@ const App = () => (
             {/* Platform-wide routes (Phase 1) */}
             <Route path="/messages" element={<ProtectedRoute requireRole requireProfile><Messaging /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute requireRole requireProfile><PlatformSettings /></ProtectedRoute>} />
+            <Route path="/ai-matching" element={<ProtectedRoute requireRole requireProfile><AIMatching /></ProtectedRoute>} />
 
             {/* Catch-all */}
             <Route path="*" element={<NotFound />} />

@@ -40,6 +40,7 @@ import InfluencerProfile from "./pages/influencer/InfluencerProfile";
 // Platform Pages (Phase 1 only)
 import Messaging from "./pages/platform/Messaging";
 import PlatformSettings from "./pages/platform/Settings";
+import AIMatching from "./pages/platform/AIMatching";
 
 const queryClient = new QueryClient();
 

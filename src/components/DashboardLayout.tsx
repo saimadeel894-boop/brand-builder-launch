@@ -82,6 +82,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           { name: "Brand Profile", href: "/brand/profile", icon: Building2 },
           { name: "Find Manufacturers", href: "/brand/manufacturers", icon: Factory },
           { name: "My RFQs", href: "/brand/rfqs", icon: FileText },
+          { name: "AI Matching", href: "/ai-matching", icon: Brain },
           { name: "Create Campaign", href: "/brand/campaigns/create", icon: Plus },
           { name: "Applications", href: "/brand/applications", icon: Users },
           { name: "divider", href: "#", icon: LayoutDashboard },

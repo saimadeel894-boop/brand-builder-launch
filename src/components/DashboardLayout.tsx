@@ -23,6 +23,17 @@ import {
   FileText,
   User,
   Brain,
+  BarChart3,
+  Shield,
+  Truck,
+  DollarSign,
+  Scale,
+  Beaker,
+  TrendingUp,
+  Megaphone,
+  CreditCard,
+  Globe,
+  UserCog,
 } from "lucide-react";
 
 interface DashboardLayoutProps {
@@ -64,7 +75,19 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     ];
 
     const platformNav = [
+      { name: "divider", href: "#", icon: LayoutDashboard },
       { name: "Messages", href: "/messages", icon: MessageSquare },
+      { name: "Analytics", href: "/analytics", icon: BarChart3 },
+      { name: "Contracts", href: "/contracts", icon: FileText },
+      { name: "Escrow Payment", href: "/escrow", icon: Shield },
+      { name: "Sample Tracking", href: "/sample-tracking", icon: Truck },
+      { name: "Invoicing", href: "/invoicing", icon: CreditCard },
+      { name: "Payments & Wallets", href: "/payments", icon: DollarSign },
+      { name: "Disputes", href: "/disputes", icon: Scale },
+      { name: "divider2", href: "#", icon: LayoutDashboard },
+      { name: "Ingredients DB", href: "/ingredients", icon: Beaker },
+      { name: "Compliance", href: "/compliance", icon: Shield },
+      { name: "Market Intel", href: "/market-intelligence", icon: Globe },
     ];
 
     switch (profile?.role) {
@@ -74,7 +97,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           { name: "My Profile", href: "/manufacturer/profile", icon: Factory },
           { name: "Products", href: "/manufacturer/products", icon: Package },
           { name: "RFQs", href: "/manufacturer/rfqs", icon: FileText },
-          { name: "divider", href: "#", icon: LayoutDashboard },
           ...platformNav,
         ];
       case "brand":
@@ -84,9 +106,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           { name: "Find Manufacturers", href: "/brand/manufacturers", icon: Factory },
           { name: "My RFQs", href: "/brand/rfqs", icon: FileText },
           { name: "AI Matching", href: "/ai-matching", icon: Brain },
+          { name: "Campaign Analytics", href: "/campaign-analytics", icon: TrendingUp },
+          { name: "Campaign Tracking", href: "/campaign-tracking", icon: Megaphone },
           { name: "Create Campaign", href: "/brand/campaigns/create", icon: Plus },
           { name: "Applications", href: "/brand/applications", icon: Users },
-          { name: "divider", href: "#", icon: LayoutDashboard },
           ...platformNav,
         ];
       case "influencer":
@@ -95,7 +118,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           { name: "My Profile", href: "/influencer/profile", icon: User },
           { name: "Marketplace", href: "/influencer/marketplace", icon: Diamond },
           { name: "My Applications", href: "/influencer/applications", icon: FileText },
-          { name: "divider", href: "#", icon: LayoutDashboard },
           ...platformNav,
         ];
       default:
@@ -123,7 +145,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
           <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
             {navigation.map((item, index) => {
-              if (item.name === "divider") {
+              if (item.name === "divider" || item.name === "divider2") {
                 return <div key={`divider-${index}`} className="my-3 border-t border-sidebar-border mx-2" />;
               }
 

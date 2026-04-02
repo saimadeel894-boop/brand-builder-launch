@@ -59,6 +59,18 @@ import CampaignManager from "./pages/platform/CampaignManager";
 import UserProfileManagement from "./pages/platform/UserProfileManagement";
 import AdminDashboard from "./pages/platform/AdminDashboard";
 
+// Demo Pages (investor presentations)
+import DemoFormulationCanvas from "./pages/demo/DemoFormulationCanvas";
+import DemoSettings from "./pages/demo/DemoSettings";
+import DemoIngredientDatabase from "./pages/demo/DemoIngredientDatabase";
+import DemoInfluencerFeedback from "./pages/demo/DemoInfluencerFeedback";
+import DemoInfluencerOnboarding from "./pages/demo/DemoInfluencerOnboarding";
+import DemoInfluencerProfile from "./pages/demo/DemoInfluencerProfile";
+import DemoInvoicing from "./pages/demo/DemoInvoicing";
+import DemoManufacturerOnboarding from "./pages/demo/DemoManufacturerOnboarding";
+import DemoMarketIntelligence from "./pages/demo/DemoMarketIntelligence";
+import DemoMessagingV2 from "./pages/demo/DemoMessagingV2";
+
 const queryClient = new QueryClient();
 
 const App = () => (

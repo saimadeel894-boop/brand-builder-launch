@@ -70,6 +70,15 @@ import DemoInvoicing from "./pages/demo/DemoInvoicing";
 import DemoManufacturerOnboarding from "./pages/demo/DemoManufacturerOnboarding";
 import DemoMarketIntelligence from "./pages/demo/DemoMarketIntelligence";
 import DemoMessagingV2 from "./pages/demo/DemoMessagingV2";
+import DemoPlatformDashboard from "./pages/demo/DemoPlatformDashboard";
+import DemoSuccessReport from "./pages/demo/DemoSuccessReport";
+import DemoFinalApproval from "./pages/demo/DemoFinalApproval";
+import DemoComplianceTracker from "./pages/demo/DemoComplianceTracker";
+import DemoRfqManagement from "./pages/demo/DemoRfqManagement";
+import DemoSampleTracking from "./pages/demo/DemoSampleTracking";
+import DemoSustainability from "./pages/demo/DemoSustainability";
+import DemoInfluencerDiscovery from "./pages/demo/DemoInfluencerDiscovery";
+import DemoUserProfile from "./pages/demo/DemoUserProfile";
 
 const queryClient = new QueryClient();
 

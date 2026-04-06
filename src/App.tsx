@@ -70,6 +70,15 @@ import DemoInvoicing from "./pages/demo/DemoInvoicing";
 import DemoManufacturerOnboarding from "./pages/demo/DemoManufacturerOnboarding";
 import DemoMarketIntelligence from "./pages/demo/DemoMarketIntelligence";
 import DemoMessagingV2 from "./pages/demo/DemoMessagingV2";
+import DemoPlatformDashboard from "./pages/demo/DemoPlatformDashboard";
+import DemoSuccessReport from "./pages/demo/DemoSuccessReport";
+import DemoFinalApproval from "./pages/demo/DemoFinalApproval";
+import DemoComplianceTracker from "./pages/demo/DemoComplianceTracker";
+import DemoRfqManagement from "./pages/demo/DemoRfqManagement";
+import DemoSampleTracking from "./pages/demo/DemoSampleTracking";
+import DemoSustainability from "./pages/demo/DemoSustainability";
+import DemoInfluencerDiscovery from "./pages/demo/DemoInfluencerDiscovery";
+import DemoUserProfile from "./pages/demo/DemoUserProfile";
 
 const queryClient = new QueryClient();
 
@@ -136,6 +145,17 @@ const App = () => (
             <Route path="/campaign-manager" element={<ProtectedRoute requireRole requireProfile><CampaignManager /></ProtectedRoute>} />
             <Route path="/user-management" element={<ProtectedRoute requireRole requireProfile><UserProfileManagement /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute requireRole requireProfile><AdminDashboard /></ProtectedRoute>} />
+
+            {/* Demo Pages (investor presentations) */}
+            <Route path="/demo/dashboard" element={<DemoPlatformDashboard />} />
+            <Route path="/demo/success-report" element={<DemoSuccessReport />} />
+            <Route path="/demo/final-approval" element={<DemoFinalApproval />} />
+            <Route path="/demo/compliance-tracker" element={<DemoComplianceTracker />} />
+            <Route path="/demo/rfq" element={<DemoRfqManagement />} />
+            <Route path="/demo/sample-tracking" element={<DemoSampleTracking />} />
+            <Route path="/demo/sustainability" element={<DemoSustainability />} />
+            <Route path="/demo/influencer-discovery" element={<DemoInfluencerDiscovery />} />
+            <Route path="/demo/user-profile" element={<DemoUserProfile />} />
 
             {/* Catch-all */}
             <Route path="*" element={<NotFound />} />
